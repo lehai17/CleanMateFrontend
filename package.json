@@ -857,6 +857,9 @@
     "yargs-parser": "^20.2.9",
     "yocto-queue": "^0.1.0"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
