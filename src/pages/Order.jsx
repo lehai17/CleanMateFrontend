@@ -80,7 +80,6 @@ export default function Order() {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
-      <Header />
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Đơn hàng đã đặt</h1>
@@ -153,7 +152,6 @@ export default function Order() {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 }
