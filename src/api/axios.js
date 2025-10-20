@@ -1,13 +1,11 @@
 import axios from "axios";
 
-// 🔹 Tự chọn baseURL theo môi trường
-const API_BASE =
-  process.env.NODE_ENV === "production"
-    ? "https://cleanmate-api.onrender.com"
-    : "http://localhost:5238";
+// 🔹 Ưu tiên đọc từ biến môi trường (chuẩn cho Create React App)
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5238";
 
 console.log("[CONFIG] API_BASE =", API_BASE);
 
+// 🔹 Tạo instance mặc định
 export const api = axios.create({
   baseURL: API_BASE,
 });
@@ -21,13 +19,14 @@ api.interceptors.request.use((config) => {
 
   config.headers["Content-Type"] = "application/json";
 
-  // Debug
+  // Debug log
   console.log(
     "[API] ->",
     config.method?.toUpperCase(),
-    config.url,
+    config.baseURL + config.url,
     "Auth:",
     config.headers.Authorization
   );
+
   return config;
 });
