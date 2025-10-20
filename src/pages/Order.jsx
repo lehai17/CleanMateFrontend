@@ -1,93 +1,57 @@
-// src/pages/Order.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../api/axios";
 
 export default function Order() {
-  const API_URL = process.env.REACT_APP_API_URL;
   const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const API_BASE = useMemo(
-    () =>
-      (process.env.REACT_APP_API_BASE_URL || "http://localhost:5238").replace(
-        /\/+$/,
-        ""
-      ),
-    []
-  );
-
   useEffect(() => {
-    const ac = new AbortController();
+    if (!user?.id && !user?.userId) {
+      setErr("Chưa xác định userId.");
+      setLoading(false);
+      return;
+    }
 
     async function fetchOrders() {
-      if (!user?.id && !user?.userId) {
-        setErr("Chưa xác định userId.");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setErr("");
-
-      const headers = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const uid = user?.id || user?.userId;
-
       try {
-        const res = await fetch(
-          `${API_BASE}/api/orders?userId=${encodeURIComponent(uid)}`,
-          {
-            method: "GET",
-            headers,
-            signal: ac.signal,
-          }
+        setLoading(true);
+        setErr("");
+        const uid = user?.id || user?.userId;
+
+        // ✅ Gọi API bằng axios instance
+        const res = await api.get(
+          `/api/orders?userId=${encodeURIComponent(uid)}`
         );
-
-        if (!res.ok) {
-          const t = await safeText(res);
-          throw new Error(`API lỗi (${res.status}): ${t || res.statusText}`);
-        }
-
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : data?.items || [];
+        const list = Array.isArray(res.data) ? res.data : res.data?.items || [];
         setOrders(normalizeOrders(list));
       } catch (e) {
-        if (e.name !== "AbortError") {
-          setErr(e.message || "Không thể tải đơn hàng.");
-        }
+        console.error("Fetch orders error:", e);
+        setErr(e.message || "Không thể tải đơn hàng.");
       } finally {
         setLoading(false);
       }
     }
 
     fetchOrders();
-    return () => ac.abort();
-  }, [API_BASE, token, user?.id, user?.userId]);
+  }, [user?.id, user?.userId, token]);
 
-  // ==== HÀM XỬ LÝ XÓA ====
+  // ==== XÓA ====
   async function handleDelete(id) {
     if (!window.confirm("Bạn có chắc muốn xóa đơn này?")) return;
-
     try {
-      const res = await fetch(`${API_BASE}/api/orders/${id}`, {
-        method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (!res.ok) throw new Error("Xóa thất bại");
-
+      await api.delete(`/api/orders/${id}`);
       setOrders((prev) => prev.filter((x) => x.id !== id));
     } catch (err) {
       alert(err.message);
     }
   }
 
-  // ==== HÀM XỬ LÝ SỬA ====
+  // ==== SỬA ====
   async function handleEdit(order) {
     const newDate = window.prompt(
       "Nhập ngày bắt đầu (YYYY-MM-DD HH:mm):",
@@ -102,23 +66,13 @@ export default function Order() {
     if (newPayment === null) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/orders/${order.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          ...order,
-          startTime: new Date(newDate).toISOString(),
-          paymentMethod: newPayment,
-        }),
+      const res = await api.put(`/api/orders/${order.id}`, {
+        ...order,
+        startTime: new Date(newDate).toISOString(),
+        paymentMethod: newPayment,
       });
 
-      if (!res.ok) throw new Error("Sửa thất bại");
-
-      const updated = await res.json();
-      setOrders((prev) => prev.map((x) => (x.id === order.id ? updated : x)));
+      setOrders((prev) => prev.map((x) => (x.id === order.id ? res.data : x)));
     } catch (err) {
       alert(err.message);
     }
@@ -126,6 +80,7 @@ export default function Order() {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
+      <Header />
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Đơn hàng đã đặt</h1>
@@ -198,19 +153,12 @@ export default function Order() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
 
 /* ================= helpers ================= */
-
-async function safeText(res) {
-  try {
-    return await res.text();
-  } catch {
-    return "";
-  }
-}
 
 function normalizeOrders(list) {
   return list.map((b) => ({
@@ -235,6 +183,7 @@ function formatDate(val) {
   const mi = String(d.getMinutes()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
+
 function formatDateInput(val) {
   try {
     const d = new Date(val);
