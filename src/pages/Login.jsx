@@ -49,13 +49,21 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Gọi API để đăng nhập
       const res = await loginApi(email, password);
-      login(res.user, res.token); // cập nhật context + localStorage
+      console.log("Login successful", res); // Log kết quả trả về từ loginApi
+
+      // Cập nhật thông tin người dùng và token vào context và localStorage
+      login(res.user, res.token);
+
+      // Chuyển hướng đến trang chính
       navigate("/");
     } catch (err) {
-      alert(err?.response?.data || "Đăng nhập thất bại");
+      // Xử lý lỗi khi đăng nhập thất bại
+      console.error("Login failed", err.response?.data || err.message);
+      alert(err.response?.data || "Đăng nhập thất bại");
     } finally {
-      setLoading(false);
+      setLoading(false); // Đảm bảo không còn loading
     }
   };
 
@@ -211,7 +219,7 @@ export default function Login() {
         </div>
 
         {/* Divider */}
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -221,10 +229,10 @@ export default function Login() {
                 Hoặc đăng nhập bằng
               </span>
             </div>
-          </div>
+          </div> */}
 
-          {/* Social buttons: giữ nguyên Google & Facebook */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+        {/* Social buttons: giữ nguyên Google & Facebook */}
+        {/* <div className="mt-4 grid grid-cols-2 gap-3">
             <GoogleLogin
               onSuccess={async (cred) => {
                 try {
@@ -241,9 +249,9 @@ export default function Login() {
               onError={() => alert("Google login error")}
               shape="rectangular"
               text="continue_with"
-            />
+            /> */}
 
-            <button
+        {/* <button
               type="button"
               onClick={() => alert("Demo: Facebook Login")}
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
@@ -258,7 +266,7 @@ export default function Login() {
               Facebook
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -13,8 +13,12 @@ export const api = axios.create({
 // 🔹 Gắn token Authorization nếu có
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("cm_token");
+
+  console.log("Token từ localStorage:", token); // Log để kiểm tra token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.log("No token found in localStorage.");
   }
 
   config.headers["Content-Type"] = "application/json";

@@ -337,8 +337,10 @@ function TimeAndDuration({
   setSelectedTime,
   totalPrice,
 }) {
-  const minHours = service?.minHours ?? 2;
+  const MIN_HOURS = service?.minHours ?? 1; // vẫn lấy min theo service
+  const MAX_HOURS = 8;
 
+  // ⬇️ giữ nguyên block minTime
   const minTime = useMemo(() => {
     if (!selectedDate) return "00:00";
     if (selectedDate !== TODAY_STR) return "00:00";
@@ -348,9 +350,13 @@ function TimeAndDuration({
     return `${hh}:${mm}`;
   }, [selectedDate]);
 
+  // ✅ CHỈ NHẢY 1 GIỜ & LUÔN LÀ SỐ NGUYÊN
   const adjust = (delta) => {
-    const v = Number((duration + delta).toFixed(1));
-    if (v >= minHours && v <= 8) setDuration(v);
+    const cur = Number.isInteger(duration)
+      ? duration
+      : Math.round(Number(duration) || MIN_HOURS);
+    const next = Math.max(MIN_HOURS, Math.min(MAX_HOURS, cur + delta)); // clamp [min, max]
+    setDuration(next);
   };
 
   const isTimeValid = useMemo(() => {
@@ -399,21 +405,23 @@ function TimeAndDuration({
         <h4 className="font-medium text-gray-900 mb-3">Thời gian làm việc</h4>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => adjust(-0.5)}
+            onClick={() => adjust(-1)} // ⬅️ trừ 1 giờ
             className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
           >
             -
           </button>
           <div className="flex-1 text-center">
             <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
-              {duration.toFixed(1)}
+              {Number.isInteger(duration)
+                ? duration
+                : Math.round(Number(duration) || MIN_HOURS)}
             </div>
             <div className="text-sm text-gray-500">
-              giờ (tối thiểu {minHours} giờ)
+              giờ (tối thiểu {MIN_HOURS} giờ)
             </div>
           </div>
           <button
-            onClick={() => adjust(0.5)}
+            onClick={() => adjust(1)} // ⬅️ cộng 1 giờ
             className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
           >
             +
@@ -1013,11 +1021,11 @@ export default function Booking() {
 
     try {
       const res = await createBooking({
-        CleanerId: 1,
+        // CleanerId: 1,
         // gửi ISO thật sự để .NET parse an toàn
         StartTime: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
-        DurationHours: duration,
-        Price: total,
+        DurationHours: Number(duration),
+        Price: Number(total),
         Address: customerInfo.address,
         Notes: customerInfo.notes,
         PaymentMethod: customerInfo.paymentMethod,

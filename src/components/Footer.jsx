@@ -27,31 +27,13 @@ export default function Footer() {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://facebook.com/yourpage"
+                href="https://www.facebook.com/profile.php?id=61581594251149"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Facebook"
                 className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-700 text-white"
               >
                 <FaFacebookF className="w-4 h-4" />
-              </a>
-
-              <a
-                href="https://instagram.com/yourpage"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-amber-600 text-white"
-              >
-                <FaInstagram className="w-4 h-4" />
-              </a>
-
-              <a
-                href="mailto:hello@cleanmate.vn"
-                aria-label="Gmail"
-                className="w-8 h-8 bg-emerald-700 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-800 text-white"
-              >
-                <SiGmail className="w-4 h-4" />
               </a>
             </div>
           </div>
