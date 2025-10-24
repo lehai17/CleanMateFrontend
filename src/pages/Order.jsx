@@ -52,31 +52,31 @@ export default function Order() {
   }
 
   // ==== SỬA ====
-  async function handleEdit(order) {
-    const newDate = window.prompt(
-      "Nhập ngày bắt đầu (YYYY-MM-DD HH:mm):",
-      order.date ? formatDateInput(order.date) : ""
-    );
-    if (newDate === null) return;
+  // async function handleEdit(order) {
+  //   const newDate = window.prompt(
+  //     "Nhập ngày bắt đầu (YYYY-MM-DD HH:mm):",
+  //     order.date ? formatDateInput(order.date) : ""
+  //   );
+  //   if (newDate === null) return;
 
-    const newPayment = window.prompt(
-      "Nhập phương thức thanh toán (vd: cash, momo, vnpay):",
-      order.paymentMethod || "cash"
-    );
-    if (newPayment === null) return;
+  //   const newPayment = window.prompt(
+  //     "Nhập phương thức thanh toán (vd: cash, momo, vnpay):",
+  //     order.paymentMethod || "cash"
+  //   );
+  //   if (newPayment === null) return;
 
-    try {
-      const res = await api.put(`/api/orders/${order.id}`, {
-        ...order,
-        startTime: new Date(newDate).toISOString(),
-        paymentMethod: newPayment,
-      });
+  //   try {
+  //     const res = await api.put(`/api/orders/${order.id}`, {
+  //       ...order,
+  //       startTime: new Date(newDate).toISOString(),
+  //       paymentMethod: newPayment,
+  //     });
 
-      setOrders((prev) => prev.map((x) => (x.id === order.id ? res.data : x)));
-    } catch (err) {
-      alert(err.message);
-    }
-  }
+  //     setOrders((prev) => prev.map((x) => (x.id === order.id ? res.data : x)));
+  //   } catch (err) {
+  //     alert(err.message);
+  //   }
+  // }
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
@@ -132,12 +132,12 @@ export default function Order() {
                     </td>
                     <td className="px-6 py-4">{o.paymentMethod || "-"}</td>
                     <td className="px-6 py-4 space-x-3">
-                      <button
+                      {/* <button
                         onClick={() => handleEdit(o)}
                         className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
                       >
                         Sửa
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => handleDelete(o.id)}
                         className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
