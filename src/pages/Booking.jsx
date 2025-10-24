@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createBooking } from "../api/bookings";
 import Header from "../components/Header";
 
@@ -957,7 +957,40 @@ function Success({ code, onNew, onHome }) {
    MAIN: Booking (4 bước)
 ========================= */
 export default function Booking() {
+  const navigate = useNavigate();
+
   const [currentStep, setCurrentStep] = useState(1);
+
+  const location = useLocation();
+  React.useEffect(() => {
+    if (location.state?.goToStep) {
+      setCurrentStep(location.state.goToStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.state]);
+  React.useEffect(() => {
+    const b = location.state?.booking;
+    if (b) {
+      // ✅ Gán lại dịch vụ, thời gian
+      setSelectedKey(
+        Object.keys(SERVICES).find((k) => SERVICES[k].name === b.serviceName)
+      );
+      setSelectedDate(b.date);
+      setSelectedTime(b.time);
+      setDuration(b.duration);
+
+      // ✅ Gán lại toàn bộ thông tin khách hàng
+      setCustomerInfo({
+        name: b.name || "",
+        phone: b.phone || "",
+        email: b.email || "",
+        address: b.address || "",
+        notes: b.notes || "",
+        paymentMethod: b.paymentMethod || "cash",
+      });
+    }
+  }, [location.state]);
+
   const [selectedKey, setSelectedKey] = useState(null);
   const service = selectedKey ? SERVICES[selectedKey] : null;
 
@@ -1008,9 +1041,36 @@ export default function Booking() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // const onCustomerNext = () => {
+  //   const { name, phone, address } = customerInfo;
+  //   if (!name.trim() || !phone.trim() || !address.trim()) return;
+  //   goNext();
+  //   window.scrollTo({ top: 0, behavior: "smooth" });
+  // };
   const onCustomerNext = () => {
-    const { name, phone, address } = customerInfo;
+    const { name, phone, address, paymentMethod } = customerInfo;
     if (!name.trim() || !phone.trim() || !address.trim()) return;
+
+    // Nếu chọn thanh toán online → chuyển đến trang QR MoMo
+    if (paymentMethod === "online") {
+      const bookingData = {
+        serviceName: service?.name,
+        date: selectedDate,
+        time: selectedTime,
+        duration,
+        price: total,
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        email: customerInfo.email,
+        address: customerInfo.address,
+        notes: customerInfo.notes,
+        paymentMethod: customerInfo.paymentMethod,
+      };
+      navigate("/payment-qr", { state: { booking: bookingData, fromStep: 3 } });
+      return;
+    }
+
+    // Ngược lại (tiền mặt) → đi bước xác nhận như cũ
     goNext();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

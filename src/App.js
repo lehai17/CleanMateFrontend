@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Order from "./pages/Order";
+import PaymentQR from "./pages/PaymentQR";
 
 function CleanMateLanding() {
   const navigate = useNavigate();
@@ -622,6 +623,7 @@ export default function App() {
         />
         <Route path="/services" element={<Services />} />
         <Route path="/orders" element={<Order />} />
+        <Route path="/payment-qr" element={<PaymentQR />} />
       </Routes>
       <Footer />
     </>

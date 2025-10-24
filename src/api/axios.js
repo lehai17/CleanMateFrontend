@@ -1,7 +1,8 @@
 import axios from "axios";
 
 // 🔹 Ưu tiên đọc từ biến môi trường (chuẩn cho Create React App)
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5238";
+// const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5238";
+const API_BASE = "http://localhost:5238";
 
 console.log("[CONFIG] API_BASE =", API_BASE);
 
