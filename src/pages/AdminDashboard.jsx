@@ -238,9 +238,9 @@ export default function AdminDashboard() {
     {
       key: "bookings",
       title: "Tổng booking",
-      value: 1247,
-      trendText: "+12.5%",
-      subText: "so với tháng trước",
+      value: 46,
+      //   trendText: "+12.5%",
+      //   subText: "so với tháng trước",
       type: "number",
       bgIcon: "bg-blue-100",
       iconColor: "text-blue-600",
@@ -263,9 +263,9 @@ export default function AdminDashboard() {
     {
       key: "revenue",
       title: "Doanh thu",
-      value: 89200000, // ₫89.2M
-      trendText: "+18.2%",
-      subText: "so với tháng trước",
+      value: 8200000,
+      //   trendText: "+18.2%",
+      //   subText: "so với tháng trước",
       type: "money",
       bgIcon: "bg-green-100",
       iconColor: "text-green-600",
@@ -288,27 +288,27 @@ export default function AdminDashboard() {
     {
       key: "customers",
       title: "Khách hàng",
-      value: 3456,
-      trendText: "+8.1%",
-      subText: "so với tháng trước",
+      value: 85,
+      //   trendText: "+8.1%",
+      //   subText: "so với tháng trước",
       type: "number",
       bgIcon: "bg-purple-100",
       iconColor: "text-purple-600",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-          ></path>
-        </svg>
-      ),
+      //   icon: (
+      //     <svg
+      //       className="w-8 h-8"
+      //       fill="none"
+      //       stroke="currentColor"
+      //       viewBox="0 0 24 24"
+      //     >
+      //       <path
+      //         strokeLinecap="round"
+      //         strokeLinejoin="round"
+      //         strokeWidth="2"
+      //         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+      //       ></path>
+      //     </svg>
+      //   ),
     },
   ];
 
@@ -367,40 +367,40 @@ export default function AdminDashboard() {
                 rank={1}
                 color="blue"
                 name="Dọn dẹp nhà cửa"
-                bookings={456}
-                revenue={32500000}
+                bookings={43}
+                revenue={7930}
                 progress={0.85}
-              />
-              <ServiceRow
-                rank={2}
-                color="green"
-                name="Giặt ủi quần áo"
-                bookings={324}
-                revenue={18200000}
-                progress={0.65}
               />
               <ServiceRow
                 rank={3}
                 color="purple"
                 name="Nấu ăn gia đình"
-                bookings={287}
-                revenue={15800000}
+                bookings={3}
+                revenue={270000}
                 progress={0.55}
+              />
+              <ServiceRow
+                rank={2}
+                color="green"
+                name="Giặt ủi quần áo"
+                bookings={0}
+                revenue={0}
+                progress={0.65}
               />
               <ServiceRow
                 rank={4}
                 color="orange"
                 name="Chăm sóc trẻ em"
-                bookings={198}
-                revenue={12400000}
+                bookings={0}
+                revenue={0}
                 progress={0.45}
               />
               <ServiceRow
                 rank={5}
                 color="red"
                 name="Chăm sóc người già"
-                bookings={156}
-                revenue={9800000}
+                bookings={0}
+                revenue={0}
                 progress={0.35}
               />
             </div>
