@@ -15,6 +15,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Order from "./pages/Order";
 import PaymentQR from "./pages/PaymentQR";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function CleanMateLanding() {
   const navigate = useNavigate();
@@ -618,6 +619,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <Booking />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowed={["Admin"]}>
+              <AdminDashboard />
             </PrivateRoute>
           }
         />

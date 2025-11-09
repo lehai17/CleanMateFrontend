@@ -1,6 +1,7 @@
 // src/pages/Login.jsx
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+// [SỬA] thêm useLocation để lấy trang gốc (from) khi bị chặn
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { loginApi } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
@@ -16,6 +17,8 @@ export default function Login() {
   const [logoPreview, setLogoPreview] = useState(null);
   const fileRef = useRef(null);
   const navigate = useNavigate();
+  // [SỬA] lấy location để đọc state.from (trang trước đó khi bị chặn)
+  const loc = useLocation();
 
   const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
@@ -29,20 +32,6 @@ export default function Login() {
     reader.readAsDataURL(file);
   };
 
-  // const onSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   try {
-  //     const res = await loginApi(email, password);
-  //     localStorage.setItem("cm_token", res.token);
-  //     localStorage.setItem("cm_user", JSON.stringify(res.user));
-  //     navigate("/"); // hoặc trang chủ
-  //   } catch (err) {
-  //     alert(err?.response?.data || "Đăng nhập thất bại");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const { login } = useAuth();
 
   const onSubmit = async (e) => {
@@ -51,19 +40,25 @@ export default function Login() {
     try {
       // Gọi API để đăng nhập
       const res = await loginApi(email, password);
-      console.log("Login successful", res); // Log kết quả trả về từ loginApi
+      console.log("Login successful", res);
 
-      // Cập nhật thông tin người dùng và token vào context và localStorage
+      // [SỬA] Cập nhật user + token (nếu muốn nhớ lâu hơn có thể truyền remember vào context)
+      // VD nếu AuthContext hỗ trợ: login(res.user, res.token, { remember })
       login(res.user, res.token);
 
-      // Chuyển hướng đến trang chính
-      navigate("/");
+      // [SỬA] Điều hướng thông minh:
+      // - Nếu đang login để vào trang bị chặn => quay lại trang đó (from)
+      // - Nếu là Admin => sang /admin
+      // - Ngược lại => về trang chủ
+      const from = loc.state?.from?.pathname || "/";
+      const isAdmin = String(res.user?.role) === "Admin";
+      const target = isAdmin ? "/admin" : from;
+      navigate(target, { replace: true });
     } catch (err) {
-      // Xử lý lỗi khi đăng nhập thất bại
-      console.error("Login failed", err.response?.data || err.message);
-      alert(err.response?.data || "Đăng nhập thất bại");
+      console.error("Login failed", err?.response?.data || err?.message);
+      alert(err?.response?.data || "Đăng nhập thất bại");
     } finally {
-      setLoading(false); // Đảm bảo không còn loading
+      setLoading(false);
     }
   };
 
@@ -218,55 +213,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Divider */}
-        {/* <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                Hoặc đăng nhập bằng
-              </span>
-            </div>
-          </div> */}
-
-        {/* Social buttons: giữ nguyên Google & Facebook */}
-        {/* <div className="mt-4 grid grid-cols-2 gap-3">
-            <GoogleLogin
-              onSuccess={async (cred) => {
-                try {
-                  const { data } = await api.post("/api/auth/google", {
-                    IdToken: cred.credential,
-                  });
-                  // cập nhật context
-                  login(data.user, data.token);
-                  navigate("/");
-                } catch (err) {
-                  alert("Google login failed");
-                }
-              }}
-              onError={() => alert("Google login error")}
-              shape="rectangular"
-              text="continue_with"
-            /> */}
-
-        {/* <button
-              type="button"
-              onClick={() => alert("Demo: Facebook Login")}
-              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-            >
-              <svg
-                className="w-5 h-5 text-blue-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              Facebook
-            </button>
-          </div>
-        </div> */}
+        {/* Social buttons ... (đang để comment giữ nguyên) */}
       </div>
     </div>
   );
