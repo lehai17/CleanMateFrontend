@@ -1,5 +1,8 @@
 // src/pages/AdminDashboard.jsx
 import { useEffect, useMemo, useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 // ===== Helper formatters =====
 const formatNumber = (n) =>
@@ -233,6 +236,17 @@ export default function AdminDashboard() {
   // ====== Mock state (range selector chưa cần xử lý logic theo yêu cầu) ======
   const [range, setRange] = useState("30d");
 
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    try {
+      logout(); // xóa token/user trong AuthContext
+    } finally {
+      navigate("/login", { replace: true }); // quay về trang login
+    }
+  };
+
   // ====== Mock data ======
   const stats = [
     {
@@ -327,17 +341,18 @@ export default function AdminDashboard() {
             />
             CleanMate Admin Dashboard
           </h1>
+        </div>
 
-          {/* Range select (mock) */}
-          <select
-            value={range}
-            onChange={(e) => setRange(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm"
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline text-sm text-gray-500">
+            👋 {user?.fullName || user?.email}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800"
           >
-            <option value="30d">30 ngày qua</option>
-            <option value="7d">7 ngày qua</option>
-            <option value="today">Hôm nay</option>
-          </select>
+            Đăng xuất
+          </button>
         </div>
 
         {/* ===== Stat cards ===== */}
