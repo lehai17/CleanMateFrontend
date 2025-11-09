@@ -375,7 +375,7 @@ export default function AdminDashboard() {
                 color="blue"
                 name="Dọn dẹp nhà cửa"
                 bookings={43}
-                revenue={7930}
+                revenue={7930000}
                 progress={0.85}
               />
               <ServiceRow
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
                 name="Nấu ăn gia đình"
                 bookings={3}
                 revenue={270000}
-                progress={0.55}
+                progress={0.15}
               />
               <ServiceRow
                 rank={2}
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                 name="Giặt ủi quần áo"
                 bookings={0}
                 revenue={0}
-                progress={0.65}
+                progress={0}
               />
               <ServiceRow
                 rank={4}
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                 name="Chăm sóc trẻ em"
                 bookings={0}
                 revenue={0}
-                progress={0.45}
+                progress={0}
               />
               <ServiceRow
                 rank={5}
@@ -408,7 +408,7 @@ export default function AdminDashboard() {
                 name="Chăm sóc người già"
                 bookings={0}
                 revenue={0}
-                progress={0.35}
+                progress={0}
               />
             </div>
           </div>
