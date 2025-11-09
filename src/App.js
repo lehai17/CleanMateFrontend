@@ -1,6 +1,12 @@
 // src/App.js
 import { useCallback } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { FaFacebookF, FaInstagram } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import Login from "./pages/Login";
@@ -606,8 +612,11 @@ function Step({ number, title, desc }) {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   return (
     <>
+      {!isAdminRoute && <Header />}
       <Header />
       <Routes>
         <Route path="/" element={<CleanMateLanding />} />
@@ -635,6 +644,8 @@ export default function App() {
         <Route path="/payment-qr" element={<PaymentQR />} />
       </Routes>
       <Footer />
+
+      {!isAdminRoute && <Footer />}
     </>
   );
 }
