@@ -301,7 +301,7 @@ export default function AdminDashboard() {
     },
     {
       key: "customers",
-      title: "Khách hàng",
+      title: "User",
       value: 203,
       //   trendText: "+8.1%",
       //   subText: "so với tháng trước",
