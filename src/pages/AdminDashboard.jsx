@@ -277,7 +277,7 @@ export default function AdminDashboard() {
     {
       key: "revenue",
       title: "Doanh thu",
-      value: 8200000,
+      value: 4300000,
       //   trendText: "+18.2%",
       //   subText: "so với tháng trước",
       type: "money",
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
     {
       key: "customers",
       title: "Khách hàng",
-      value: 85,
+      value: 203,
       //   trendText: "+8.1%",
       //   subText: "so với tháng trước",
       type: "number",
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
                 color="blue"
                 name="Dọn dẹp nhà cửa"
                 bookings={43}
-                revenue={7930000}
+                revenue={4030000}
                 progress={0.85}
               />
               <ServiceRow
