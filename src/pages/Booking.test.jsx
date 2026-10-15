@@ -4,13 +4,14 @@ import Booking from "./Booking";
 import { createBooking } from "../api/bookings";
 
 const mockLocation = { state: null };
+const mockUser = { fullName: "Customer", phoneNumber: "0901234567", email: "customer@example.test", address: "123 Test Street" };
 jest.mock("react-router-dom", () => ({
   useLocation: () => mockLocation,
   useNavigate: () => jest.fn(),
   Link: ({ to, children }) => <a href={to}>{children}</a>,
 }));
 jest.mock("../context/AuthContext", () => ({
-  useAuth: () => ({ user: { fullName: "Customer", phoneNumber: "0901234567", email: "customer@example.test", address: "123 Test Street" } }),
+  useAuth: () => ({ user: mockUser }),
 }));
 jest.mock("../api/bookings", () => ({ createBooking: jest.fn() }));
 
