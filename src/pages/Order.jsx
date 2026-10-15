@@ -89,7 +89,11 @@ export default function Order() {
                         ? `${order.price.toLocaleString("vi-VN")} d`
                         : "-"}
                     </td>
-                    <td className="px-6 py-4">{order.paymentMethod || "-"}</td>
+                    <td className="px-6 py-4">
+                      <p>{order.paymentMethod || "-"}</p>
+                      <p>{order.paymentStatus === "Paid" ? "Đã thanh toán" : "Chưa thanh toán"}</p>
+                      {order.paidAt && <p className="text-xs text-gray-500">Thu tiền: {formatDate(order.paidAt)}</p>}
+                    </td>
                     <td className="px-6 py-4">
                       <p>{order.status || "-"}</p>
                       {order.startedAt && <p className="text-xs text-gray-500">Bắt đầu: {formatDate(order.startedAt)}</p>}
@@ -123,6 +127,8 @@ function normalizeOrders(list) {
     price: booking.price,
     address: booking.address,
     paymentMethod: booking.paymentMethod,
+    paymentStatus: booking.paymentStatus,
+    paidAt: booking.paidAt,
     createdAt: booking.createdAt,
     status: booking.status,
     startedAt: booking.startedAt,

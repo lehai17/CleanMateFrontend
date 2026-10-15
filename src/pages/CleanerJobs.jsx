@@ -5,6 +5,7 @@ import {
   getMyCleanerJobs,
   startCleanerJob,
   completeCleanerJob,
+  confirmCashPayment,
 } from "../api/bookings";
 
 export default function CleanerJobs() {
@@ -96,11 +97,16 @@ export default function CleanerJobs() {
                 {myJobs.map((job) => (
                   <JobCard key={job.id} job={job}
                     disabled={busyJobId !== null}
-                    actionLabel={job.status === "Accepted" ? "Bắt đầu công việc" : "Hoàn thành công việc"}
+                    actionLabel={job.status === "Completed" ? "Xác nhận đã nhận tiền mặt" : job.status === "Accepted" ? "Bắt đầu công việc" : "Hoàn thành công việc"}
                     onAction={job.status === "Accepted"
                       ? () => handleAction(job.id, startCleanerJob, "Đã bắt đầu công việc.")
                       : job.status === "InProgress"
                       ? () => handleAction(job.id, completeCleanerJob, "Đã hoàn thành công việc.")
+                      : job.status === "Completed" && job.paymentStatus !== "Paid" && job.paymentMethod === "cash"
+                      ? () => {
+                        if (window.confirm(`Đã nhận đủ ${Number(job.price).toLocaleString("vi-VN")} đ tiền mặt cho CM${job.id}?`))
+                          handleAction(job.id, confirmCashPayment, "Đã ghi nhận thanh toán tiền mặt.");
+                      }
                       : undefined} />
                 ))}
               </div>
@@ -131,6 +137,8 @@ function JobCard({ job, actionLabel, onAction, disabled }) {
         <p>So gio: {job.durationHours || 0}</p>
         <p>Dia chi: {job.address || "-"}</p>
         <p>Thanh toan: {job.paymentMethod || "-"}</p>
+        <p>{job.paymentStatus === "Paid" ? "Đã thanh toán" : "Chưa thanh toán"}</p>
+        {job.paidAt && <p>Thu tiền: {formatDate(job.paidAt)}</p>}
         <p>Gia: {Number(job.price || 0).toLocaleString("vi-VN")} d</p>
         {job.notes && <p>Ghi chu: {job.notes}</p>}
         {job.startedAt && <p>Bắt đầu thực tế: {formatDate(job.startedAt)}</p>}

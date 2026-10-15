@@ -134,6 +134,15 @@ test("customer books and follows assigned cleaner through start and completion",
     await assigned.getByRole("button", { name: "Hoàn thành công việc" }).click();
     await expect(assigned).toContainText("Completed");
     await expect(assigned).toContainText("Hoàn thành thực tế:");
+    await expect(assigned).toContainText("Chưa thanh toán");
+    // Dismissing the receipt confirmation must leave the order unpaid.
+    cleanerPage.once("dialog", dialog => dialog.dismiss());
+    await assigned.getByRole("button", { name: "Xác nhận đã nhận tiền mặt" }).click();
+    await expect(assigned).toContainText("Chưa thanh toán");
+    cleanerPage.once("dialog", dialog => dialog.accept());
+    await assigned.getByRole("button", { name: "Xác nhận đã nhận tiền mặt" }).click();
+    await expect(assigned).toContainText("Đã thanh toán");
+    await expect(assigned).toContainText("Thu tiền:");
     await expect(assigned.getByRole("button")).toHaveCount(0);
     await cleanerPage.reload();
     await expect(assigned).toContainText("Completed");
@@ -141,9 +150,13 @@ test("customer books and follows assigned cleaner through start and completion",
     await page.reload();
     await expect(row).toContainText("Completed");
     await expect(row).toContainText("Hoàn thành:");
+    await expect(row).toContainText("Đã thanh toán");
+    await expect(row).toContainText("Thu tiền:");
     const completed = (await (await savedOrders).json()).find(order => order.id === booking.id);
     expect(completed.startedAt).toMatch(/Z$/);
     expect(completed.completedAt).toMatch(/Z$/);
+    expect(completed.paymentStatus).toBe("Paid");
+    expect(completed.paidAt).toMatch(/Z$/);
     expect(new Date(completed.completedAt).getTime()).toBeGreaterThanOrEqual(new Date(completed.startedAt).getTime());
   } finally { await context.close(); }
 });
@@ -216,9 +229,14 @@ test("cleaner portal registers and claims a booking through the real API", async
   await row.getByRole("button", { name: "Hoàn thành công việc" }).click();
   await expect(row).toContainText("Completed");
   await expect(row).toContainText("Hoàn thành:");
+  await expect(row).toContainText("Chưa thanh toán");
+  page.once("dialog", dialog => dialog.accept());
+  await row.getByRole("button", { name: "Xác nhận đã nhận tiền mặt" }).click();
+  await expect(row).toContainText("Đã thanh toán");
+  await expect(row).toContainText("Thu tiền:");
   await expect(row.getByRole("button")).toHaveCount(0);
   const response = await request.get(`${API}/api/orders`, { headers: { Authorization: `Bearer ${customer.token}` } });
-  expect((await response.json()).find(order => order.id === booking.id).status).toBe("Completed");
+  expect((await response.json()).find(order => order.id === booking.id)).toMatchObject({ status: "Completed", paymentStatus: "Paid" });
 });
 
 test("stale progress updates show a conflict and reload the actual job state", async ({ page, request }) => {
