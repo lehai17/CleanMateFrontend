@@ -1,6 +1,6 @@
 # Automated testing
 
-Verified on 15 October 2026: 8 frontend tests, 27 backend tests and all 14
+Verified on 15 October 2026: 9 frontend tests, 29 backend tests and all 14
 Playwright system tests passed. Backend build, React production build and Android
 bundle export succeeded. The browser run confirmed test-database cleanup.
 
@@ -52,12 +52,14 @@ the normal deployment build.
 The suite runs seven scenarios on desktop Chromium and a Pixel 7 browser viewport:
 
 - Guest route protection and disabled online payment confirmation.
-- Browser registration, login, booking, cleaner acceptance, start and completion;
-  customer progress and UTC timestamps persist across reloads.
+- Browser registration, login, booking, cleaner acceptance, start, completion and
+  cash collection; dismissing collection confirmation leaves the order unpaid.
+  Customer progress, payment state and UTC timestamps persist across reloads.
 - Pending-order cancellation with history retained after reload.
 - Cleaner permissions and order ownership.
 - Invalid booking rejection and protection against client-supplied prices.
-- MVC cleaner registration, acceptance, start and completion through the API.
+- MVC cleaner registration, acceptance, start, completion and cash collection
+  through the API, with the paid state visible to the customer.
 - Conflicting updates from another device reload the actual server state.
 
 No business API responses are mocked. Test accounts are synthetic. Every run uses

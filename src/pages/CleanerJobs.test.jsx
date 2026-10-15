@@ -1,11 +1,11 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import CleanerJobs from "./CleanerJobs";
-import { completeCleanerJob, getAvailableCleanerJobs, getMyCleanerJobs, startCleanerJob } from "../api/bookings";
+import { completeCleanerJob, confirmCashPayment, getAvailableCleanerJobs, getMyCleanerJobs, startCleanerJob } from "../api/bookings";
 
 jest.mock("../api/bookings", () => ({
   acceptCleanerJob: jest.fn(), getAvailableCleanerJobs: jest.fn(), getMyCleanerJobs: jest.fn(),
-  startCleanerJob: jest.fn(), completeCleanerJob: jest.fn(),
+  startCleanerJob: jest.fn(), completeCleanerJob: jest.fn(), confirmCashPayment: jest.fn(),
 }));
 
 let container, root, jobs;
@@ -22,6 +22,29 @@ beforeEach(() => {
   root = createRoot(container);
 });
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
+
+test("cash collection requires confirmation and only server success shows paid", async () => {
+  jobs = [{ ...jobs[0], status: "Completed", paymentMethod: "cash", paymentStatus: "Unpaid" }];
+  const confirmation = jest.spyOn(window, "confirm").mockReturnValue(false);
+  try {
+    await act(async () => root.render(<CleanerJobs />));
+    await act(async () => button("Xác nhận đã nhận tiền mặt").click());
+    expect(confirmCashPayment).not.toHaveBeenCalled();
+    confirmation.mockReturnValue(true);
+    confirmCashPayment.mockRejectedValueOnce({ response: { data: { message: "Không thể ghi nhận." } } });
+    await act(async () => button("Xác nhận đã nhận tiền mặt").click());
+    expect(container.textContent).toContain("Chưa thanh toán");
+    expect(container.textContent).toContain("Không thể ghi nhận.");
+    confirmCashPayment.mockImplementation(async () => {
+      jobs = [{ ...jobs[0], paymentStatus: "Paid", paidAt: completedAt }];
+    });
+    await act(async () => button("Xác nhận đã nhận tiền mặt").click());
+    expect(confirmCashPayment).toHaveBeenCalledWith(42);
+    expect(container.textContent).toContain("Đã thanh toán");
+    expect(container.textContent).toContain("Thu tiền:");
+    expect(button("Xác nhận đã nhận tiền mặt")).toBeUndefined();
+  } finally { confirmation.mockRestore(); }
+});
 
 test("assigned work advances in order and completed work has no further actions", async () => {
   startCleanerJob.mockImplementation(async () => { jobs = [{ ...jobs[0], status: "InProgress", startedAt }]; });
