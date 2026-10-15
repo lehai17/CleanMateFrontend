@@ -3,6 +3,8 @@ import {
   acceptCleanerJob,
   getAvailableCleanerJobs,
   getMyCleanerJobs,
+  startCleanerJob,
+  completeCleanerJob,
 } from "../api/bookings";
 
 export default function CleanerJobs() {
@@ -10,6 +12,7 @@ export default function CleanerJobs() {
   const [myJobs, setMyJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [busyJobId, setBusyJobId] = useState(null);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -31,13 +34,17 @@ export default function CleanerJobs() {
     loadJobs();
   }, []);
 
-  const handleAccept = async (jobId) => {
+  const handleAction = async (jobId, action, successMessage) => {
+    if (busyJobId !== null) return;
+    setBusyJobId(jobId);
     try {
-      await acceptCleanerJob(jobId);
-      setMessage("Nhan viec thanh cong.");
-      await loadJobs();
+      await action(jobId);
+      setMessage(successMessage);
     } catch (error) {
-      setMessage(error?.response?.data?.message || "Nhan viec that bai.");
+      setMessage(error?.response?.data?.message || "Không thể cập nhật công việc. Vui lòng thử lại.");
+    } finally {
+      await loadJobs();
+      setBusyJobId(null);
     }
   };
 
@@ -73,7 +80,8 @@ export default function CleanerJobs() {
                     key={job.id}
                     job={job}
                     actionLabel="Nhan viec"
-                    onAction={() => handleAccept(job.id)}
+                    disabled={busyJobId !== null}
+                    onAction={() => handleAction(job.id, acceptCleanerJob, "Nhan viec thanh cong.")}
                   />
                 ))}
               </div>
@@ -86,7 +94,14 @@ export default function CleanerJobs() {
                   <p className="text-sm text-slate-500">Ban chua nhan don nao.</p>
                 )}
                 {myJobs.map((job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard key={job.id} job={job}
+                    disabled={busyJobId !== null}
+                    actionLabel={job.status === "Accepted" ? "Bắt đầu công việc" : "Hoàn thành công việc"}
+                    onAction={job.status === "Accepted"
+                      ? () => handleAction(job.id, startCleanerJob, "Đã bắt đầu công việc.")
+                      : job.status === "InProgress"
+                      ? () => handleAction(job.id, completeCleanerJob, "Đã hoàn thành công việc.")
+                      : undefined} />
                 ))}
               </div>
             </section>
@@ -97,11 +112,12 @@ export default function CleanerJobs() {
   );
 }
 
-function JobCard({ job, actionLabel, onAction }) {
+function JobCard({ job, actionLabel, onAction, disabled }) {
   return (
-    <article className="rounded-2xl border border-slate-200 p-5">
+    <article data-booking-id={job.id} className="rounded-2xl border border-slate-200 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
+          <p className="text-sm font-semibold text-emerald-700">CM{job.id}</p>
           <h3 className="text-lg font-semibold text-slate-900">{job.customerName}</h3>
           <p className="mt-1 text-sm text-slate-600">{job.customerPhone || "Chua co so dien thoai"}</p>
         </div>
@@ -117,12 +133,15 @@ function JobCard({ job, actionLabel, onAction }) {
         <p>Thanh toan: {job.paymentMethod || "-"}</p>
         <p>Gia: {Number(job.price || 0).toLocaleString("vi-VN")} d</p>
         {job.notes && <p>Ghi chu: {job.notes}</p>}
+        {job.startedAt && <p>Bắt đầu thực tế: {formatDate(job.startedAt)}</p>}
+        {job.completedAt && <p>Hoàn thành thực tế: {formatDate(job.completedAt)}</p>}
       </div>
 
       {onAction && (
         <button
           onClick={onAction}
-          className="mt-4 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
+          disabled={disabled}
+          className="mt-4 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           {actionLabel}
         </button>

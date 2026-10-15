@@ -90,7 +90,11 @@ export default function Order() {
                         : "-"}
                     </td>
                     <td className="px-6 py-4">{order.paymentMethod || "-"}</td>
-                    <td className="px-6 py-4">{order.status || "-"}</td>
+                    <td className="px-6 py-4">
+                      <p>{order.status || "-"}</p>
+                      {order.startedAt && <p className="text-xs text-gray-500">Bắt đầu: {formatDate(order.startedAt)}</p>}
+                      {order.completedAt && <p className="text-xs text-gray-500">Hoàn thành: {formatDate(order.completedAt)}</p>}
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         disabled={order.status !== "Pending" || new Date(order.date) <= new Date()}
@@ -121,6 +125,8 @@ function normalizeOrders(list) {
     paymentMethod: booking.paymentMethod,
     createdAt: booking.createdAt,
     status: booking.status,
+    startedAt: booking.startedAt,
+    completedAt: booking.completedAt,
   }));
 }
 

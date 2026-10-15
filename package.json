@@ -868,6 +868,9 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:e2e": "node scripts/build-e2e.cjs",
+    "test:e2e": "playwright test --config playwright.config.cjs",
+    "test:e2e:report": "playwright show-report",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -887,6 +890,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.1.14",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
