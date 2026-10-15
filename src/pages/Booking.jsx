@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createBooking } from "../api/bookings";
 import Header from "../components/Header";
+import { useAuth } from "../context/AuthContext";
 
 /* =========================
    Data & Helpers
@@ -650,6 +651,7 @@ function StepCustomer({
                     type="radio"
                     name="payment"
                     value="online"
+                    disabled
                     checked={customerInfo.paymentMethod === "online"}
                     onChange={(e) =>
                       handleInputChange("paymentMethod", e.target.value)
@@ -658,7 +660,7 @@ function StepCustomer({
                   />
                   <span className="ml-2 text-emerald-800">
                     💳 Thanh toán online{" "}
-                    <span className="font-semibold">(Giảm 5%)</span>
+                    <span className="font-semibold">(Chưa hỗ trợ)</span>
                   </span>
                 </label>
               </div>
@@ -958,6 +960,7 @@ function Success({ code, onNew, onHome }) {
 ========================= */
 export default function Booking() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -1006,6 +1009,18 @@ export default function Booking() {
     notes: "",
     paymentMethod: "cash",
   });
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    setCustomerInfo((current) => ({
+      ...current,
+      name: current.name || user.fullName || "",
+      phone: current.phone || user.phoneNumber || "",
+      email: current.email || user.email || "",
+      address: current.address || user.address || "",
+    }));
+  }, [user]);
 
   const subtotal = useMemo(
     () => (service ? service.price * duration : 0),
@@ -1076,16 +1091,12 @@ export default function Booking() {
   };
 
   const onConfirm = async () => {
-    // debug: kiểm tra token hiện có
-    console.log("Token when booking:", localStorage.getItem("cm_token"));
-
     try {
       const res = await createBooking({
-        // CleanerId: 1,
+        ServiceKey: selectedKey,
         // gửi ISO thật sự để .NET parse an toàn
         StartTime: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
         DurationHours: Number(duration),
-        Price: Number(total),
         Address: customerInfo.address,
         Notes: customerInfo.notes,
         PaymentMethod: customerInfo.paymentMethod,
@@ -1098,7 +1109,7 @@ export default function Booking() {
         status: err?.response?.status,
         data: err?.response?.data,
       });
-      alert(err?.response?.data || "Đặt lịch thất bại");
+      alert(err?.response?.data?.message || "Đặt lịch thất bại");
     }
   };
 

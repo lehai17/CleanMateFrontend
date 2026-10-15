@@ -860,6 +860,11 @@
   "engines": {
     "node": "18.x"
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js"
+    }
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
