@@ -1,13 +1,19 @@
-import { useEffect, useState } from "react";
-import { deleteOrder, getOrders } from "../api/bookings";
+import { useCallback, useEffect, useState } from "react";
+import { confirmOrderCompletion, deleteOrder, getOrders } from "../api/bookings";
+import { paymentLabel } from "../utils/payment";
+import { phoneLink } from "../utils/contact";
 
 export default function Order() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [rating, setRating] = useState("");
+  const [review, setReview] = useState("");
+  const [busyId, setBusyId] = useState(null);
+  const [feedbackError, setFeedbackError] = useState("");
 
-  useEffect(() => {
-    async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
       try {
         setLoading(true);
         setErr("");
@@ -18,10 +24,9 @@ export default function Order() {
       } finally {
         setLoading(false);
       }
-    }
-
-    fetchOrders();
   }, []);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   async function handleDelete(id) {
     if (!window.confirm("Bạn có chắc muốn hủy đơn này?")) {
@@ -36,12 +41,33 @@ export default function Order() {
     }
   }
 
+  async function submitFeedback(event, id) {
+    event.preventDefault();
+    if (busyId !== null) return;
+    setBusyId(id);
+    setFeedbackError("");
+    try {
+      const result = await confirmOrderCompletion(id, { rating: Number(rating), review });
+      setOrders(current => current.map(order => order.id === id ? { ...order, ...result } : order));
+      setEditingId(null);
+    } catch (error) {
+      setFeedbackError(error?.response?.data?.message || "Không thể gửi đánh giá. Vui lòng thử lại.");
+    } finally { setBusyId(null); }
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Don hang da dat</h1>
+          <button onClick={fetchOrders} disabled={loading || busyId !== null}
+            className="rounded border px-3 py-2 disabled:opacity-50">Tải lại trạng thái</button>
         </div>
+
+        <p className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">
+          Khách trả tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca. CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.
+        </p>
+        {feedbackError && <p role="alert" className="mb-4 text-red-700">{feedbackError}</p>}
 
         {loading && (
           <div className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
@@ -70,6 +96,7 @@ export default function Order() {
                   <th className="px-6 py-3">Ma don</th>
                   <th className="px-6 py-3">Ngay bat dau</th>
                   <th className="px-6 py-3">Dia chi</th>
+                  <th className="px-6 py-3">Cleaner nhận việc</th>
                   <th className="px-6 py-3">Gia</th>
                   <th className="px-6 py-3">Thanh toan</th>
                   <th className="px-6 py-3">Trang thai</th>
@@ -83,30 +110,65 @@ export default function Order() {
                       {order.orderCode}
                     </td>
                     <td className="px-6 py-4">{formatDate(order.date)}</td>
-                    <td className="px-6 py-4">{order.address || "-"}</td>
+                    <td className="px-6 py-4">
+                      <p>{order.address || "-"}</p>
+                      {order.contactName && <p>Người liên hệ: {order.contactName}</p>}
+                      {order.contactPhone && <p>SĐT liên hệ: {order.contactPhone}</p>}
+                    </td>
+                    <td className="px-6 py-4">
+                      {order.cleaner ? <>
+                        <p>{order.cleaner.name}</p>
+                        <p>{order.cleaner.phoneNumber || "Chưa cập nhật số điện thoại"}</p>
+                        {phoneLink(order.cleaner.phoneNumber) &&
+                          <a className="text-emerald-700 underline" href={phoneLink(order.cleaner.phoneNumber)}>Gọi cleaner</a>}
+                      </> : <p>Chưa có cleaner nhận việc</p>}
+                    </td>
                     <td className="px-6 py-4">
                       {typeof order.price === "number"
                         ? `${order.price.toLocaleString("vi-VN")} d`
                         : "-"}
                     </td>
                     <td className="px-6 py-4">
-                      <p>{order.paymentMethod || "-"}</p>
-                      <p>{order.paymentStatus === "Paid" ? "Đã thanh toán" : "Chưa thanh toán"}</p>
-                      {order.paidAt && <p className="text-xs text-gray-500">Thu tiền: {formatDate(order.paidAt)}</p>}
+                      <p>{order.paymentMethod === "cash" ? "Tiền mặt trực tiếp" : "Ghi nhận cũ"}</p>
+                      <p>{paymentLabel(order.paymentStatus, order.paymentMethod)}</p>
+                      {order.paidAt && <p className="text-xs text-gray-500">Thời gian xác nhận: {formatDate(order.paidAt)}</p>}
                     </td>
                     <td className="px-6 py-4">
                       <p>{order.status || "-"}</p>
                       {order.startedAt && <p className="text-xs text-gray-500">Bắt đầu: {formatDate(order.startedAt)}</p>}
                       {order.completedAt && <p className="text-xs text-gray-500">Hoàn thành: {formatDate(order.completedAt)}</p>}
+                      {order.customerConfirmedAt && <div className="mt-2 text-sm">
+                        <p>Khách đã xác nhận hoàn thành</p>
+                        <p>Đánh giá: {order.customerRating}/5 sao</p>
+                        {order.customerReview && <p>{order.customerReview}</p>}
+                      </div>}
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        disabled={order.status !== "Pending" || new Date(order.date) <= new Date()}
+                        disabled={busyId !== null || order.status !== "Pending" || new Date(order.date) <= new Date()}
                         onClick={() => handleDelete(order.id)}
                         className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
                       >
                         Hủy đơn
                       </button>
+                      {order.status === "Completed" && !order.customerConfirmedAt && (editingId === order.id ? (
+                        <form onSubmit={event => submitFeedback(event, order.id)} className="mt-3 space-y-2">
+                          <p>Xác nhận công việc đã hoàn thành. Đánh giá này không xác nhận đã trả tiền.</p>
+                          <label htmlFor={`rating-${order.id}`} className="block">Đánh giá ca làm</label>
+                          <select id={`rating-${order.id}`} required value={rating} disabled={busyId !== null}
+                            onChange={event => setRating(event.target.value)} className="rounded border p-2">
+                            <option value="">Chọn số sao</option>
+                            {[1, 2, 3, 4, 5].map(value => <option key={value} value={value}>{value} sao</option>)}
+                          </select>
+                          <label htmlFor={`review-${order.id}`} className="block">Nhận xét (không bắt buộc)</label>
+                          <textarea id={`review-${order.id}`} maxLength={1000} value={review} disabled={busyId !== null}
+                            onChange={event => setReview(event.target.value)} className="block rounded border p-2" />
+                          <button type="submit" disabled={busyId !== null || !rating} className="rounded bg-emerald-700 px-3 py-2 text-white">Gửi đánh giá</button>
+                          <button type="button" disabled={busyId !== null} onClick={() => setEditingId(null)} className="ml-2 rounded border px-3 py-2">Đóng</button>
+                        </form>
+                      ) : <button disabled={busyId !== null} onClick={() => {
+                        setEditingId(order.id); setRating(""); setReview(""); setFeedbackError("");
+                      }} className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Xác nhận và đánh giá</button>)}
                     </td>
                   </tr>
                 ))}
@@ -126,6 +188,9 @@ function normalizeOrders(list) {
     date: booking.date ?? booking.startTime ?? booking.createdAt,
     price: booking.price,
     address: booking.address,
+    contactName: booking.contactName,
+    contactPhone: booking.contactPhone,
+    cleaner: booking.cleaner,
     paymentMethod: booking.paymentMethod,
     paymentStatus: booking.paymentStatus,
     paidAt: booking.paidAt,
@@ -133,6 +198,9 @@ function normalizeOrders(list) {
     status: booking.status,
     startedAt: booking.startedAt,
     completedAt: booking.completedAt,
+    customerConfirmedAt: booking.customerConfirmedAt,
+    customerRating: booking.customerRating,
+    customerReview: booking.customerReview,
   }));
 }
 

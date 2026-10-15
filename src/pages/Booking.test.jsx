@@ -44,6 +44,8 @@ test("booking sends service and UTC time, leaving price and ownership to the bac
   await confirm();
   const payload = createBooking.mock.calls[0][0];
   expect(payload.ServiceKey).toBe("cleaning");
+  expect(payload.ContactName).toBe("Customer");
+  expect(payload.ContactPhone).toBe("0901234567");
   expect(payload.DurationHours).toBe(2);
   expect(payload.PaymentMethod).toBe("cash");
   expect(payload.StartTime.endsWith("Z")).toBe(true);
@@ -64,6 +66,6 @@ test("backend validation errors are shown without a success screen", async () =>
 test("customer cannot select online payment", async () => {
   mockLocation.state.goToStep = 3;
   await act(async () => root.render(<Booking />));
-  expect(container.querySelector('input[value="online"]').disabled).toBe(true);
+  expect(container.querySelector('input[value="online"]')).toBeNull();
   expect(container.querySelector('input[value="cash"]').checked).toBe(true);
 });

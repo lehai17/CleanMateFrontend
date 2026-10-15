@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { paymentLabel } from "../utils/payment";
 import {
   acceptCleanerJob,
   getAvailableCleanerJobs,
@@ -14,6 +15,7 @@ export default function CleanerJobs() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [busyJobId, setBusyJobId] = useState(null);
+  const hasActiveJob = myJobs.some(job => job.status === "InProgress");
 
   const loadJobs = async () => {
     setLoading(true);
@@ -58,6 +60,8 @@ export default function CleanerJobs() {
             <p className="mt-2 text-slate-600">
               Xem don moi va nhan viec ngay khi co khach dat lich.
             </p>
+            <p className="mt-2 text-slate-600">Khách trả tiền mặt trực tiếp sau ca. Chỉ xác nhận nhận tiền khi bạn đã nhận đủ từ khách.</p>
+            <p className="mt-2 text-slate-600">Ca trùng lịch đã nhận sẽ được ẩn. Hoàn thành ca đang làm trước khi bắt đầu ca tiếp theo.</p>
           </div>
           {message && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -96,7 +100,9 @@ export default function CleanerJobs() {
                 )}
                 {myJobs.map((job) => (
                   <JobCard key={job.id} job={job}
-                    disabled={busyJobId !== null}
+                    disabled={busyJobId !== null || (job.status === "Accepted" && hasActiveJob)}
+                    blockedReason={job.status === "Accepted" && hasActiveJob
+                      ? "Hoàn thành ca đang làm trước khi bắt đầu ca này." : ""}
                     actionLabel={job.status === "Completed" ? "Xác nhận đã nhận tiền mặt" : job.status === "Accepted" ? "Bắt đầu công việc" : "Hoàn thành công việc"}
                     onAction={job.status === "Accepted"
                       ? () => handleAction(job.id, startCleanerJob, "Đã bắt đầu công việc.")
@@ -105,7 +111,7 @@ export default function CleanerJobs() {
                       : job.status === "Completed" && job.paymentStatus !== "Paid" && job.paymentMethod === "cash"
                       ? () => {
                         if (window.confirm(`Đã nhận đủ ${Number(job.price).toLocaleString("vi-VN")} đ tiền mặt cho CM${job.id}?`))
-                          handleAction(job.id, confirmCashPayment, "Đã ghi nhận thanh toán tiền mặt.");
+                          handleAction(job.id, confirmCashPayment, "Đã lưu xác nhận nhận tiền mặt của bạn.");
                       }
                       : undefined} />
                 ))}
@@ -118,7 +124,7 @@ export default function CleanerJobs() {
   );
 }
 
-function JobCard({ job, actionLabel, onAction, disabled }) {
+function JobCard({ job, actionLabel, onAction, disabled, blockedReason }) {
   return (
     <article data-booking-id={job.id} className="rounded-2xl border border-slate-200 p-5">
       <div className="flex items-start justify-between gap-4">
@@ -133,17 +139,20 @@ function JobCard({ job, actionLabel, onAction, disabled }) {
       </div>
 
       <div className="mt-4 space-y-2 text-sm text-slate-700">
-        <p>Thoi gian: {formatDate(job.startTime)}</p>
+        <p>Lịch dự kiến: {formatDate(job.startTime)} → {formatDate(new Date(new Date(job.startTime).getTime() + job.durationHours * 3600000))}</p>
         <p>So gio: {job.durationHours || 0}</p>
         <p>Dia chi: {job.address || "-"}</p>
-        <p>Thanh toan: {job.paymentMethod || "-"}</p>
-        <p>{job.paymentStatus === "Paid" ? "Đã thanh toán" : "Chưa thanh toán"}</p>
-        {job.paidAt && <p>Thu tiền: {formatDate(job.paidAt)}</p>}
+        <p>Thanh toán: {job.paymentMethod === "cash" ? "Tiền mặt trực tiếp" : "Ghi nhận cũ"}</p>
+        <p>{paymentLabel(job.paymentStatus, job.paymentMethod)}</p>
+        {job.paidAt && <p>Thời gian xác nhận: {formatDate(job.paidAt)}</p>}
+        {job.customerConfirmedAt && <p>Khách đã xác nhận hoàn thành · Đánh giá: {job.customerRating}/5 sao</p>}
         <p>Gia: {Number(job.price || 0).toLocaleString("vi-VN")} d</p>
         {job.notes && <p>Ghi chu: {job.notes}</p>}
         {job.startedAt && <p>Bắt đầu thực tế: {formatDate(job.startedAt)}</p>}
         {job.completedAt && <p>Hoàn thành thực tế: {formatDate(job.completedAt)}</p>}
       </div>
+
+      {blockedReason && <p className="mt-3 text-sm text-amber-800">{blockedReason}</p>}
 
       {onAction && (
         <button
@@ -165,7 +174,7 @@ function formatDate(value) {
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return typeof value === "string" ? value : "-";
   }
 
   return date.toLocaleString("vi-VN");

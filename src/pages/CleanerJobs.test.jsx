@@ -1,7 +1,7 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import CleanerJobs from "./CleanerJobs";
-import { completeCleanerJob, confirmCashPayment, getAvailableCleanerJobs, getMyCleanerJobs, startCleanerJob } from "../api/bookings";
+import { acceptCleanerJob, completeCleanerJob, confirmCashPayment, getAvailableCleanerJobs, getMyCleanerJobs, startCleanerJob } from "../api/bookings";
 
 jest.mock("../api/bookings", () => ({
   acceptCleanerJob: jest.fn(), getAvailableCleanerJobs: jest.fn(), getMyCleanerJobs: jest.fn(),
@@ -23,6 +23,36 @@ beforeEach(() => {
 });
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
+test("a running job disables starting another job until completion", async () => {
+  jobs = [{ ...jobs[0], status: "InProgress", startedAt }, { ...jobs[0], id: 43, status: "Accepted" }];
+  completeCleanerJob.mockImplementation(async () => { jobs = [{ ...jobs[0], status: "Completed", completedAt }, jobs[1]]; });
+  await act(async () => root.render(<CleanerJobs />));
+  expect(button("Bắt đầu công việc").disabled).toBe(true);
+  expect(container.textContent).toContain("Hoàn thành ca đang làm trước khi bắt đầu ca này.");
+  await act(async () => button("Bắt đầu công việc").click());
+  expect(startCleanerJob).not.toHaveBeenCalled();
+  await act(async () => button("Hoàn thành công việc").click());
+  expect(completeCleanerJob).toHaveBeenCalledWith(42);
+  expect(button("Bắt đầu công việc").disabled).toBe(false);
+});
+
+test("a stale claim displays the schedule conflict and removes the unavailable job on reload", async () => {
+  jobs = [];
+  const candidate = { id: 44, status: "Pending", startTime: startedAt, durationHours: 2, price: 140000 };
+  getAvailableCleanerJobs.mockResolvedValueOnce([candidate]).mockResolvedValue([]);
+  acceptCleanerJob.mockImplementation(async () => {
+    jobs = [{ ...candidate, id: 45, status: "Accepted" }];
+    throw { response: { status: 409, data: { message: "Ca này trùng lịch với ca bạn đã nhận." } } };
+  });
+  await act(async () => root.render(<CleanerJobs />));
+  await act(async () => button("Nhan viec").click());
+  expect(acceptCleanerJob).toHaveBeenCalledWith(44);
+  expect(container.textContent).toContain("Ca này trùng lịch với ca bạn đã nhận.");
+  expect(container.textContent).not.toContain("Nhan viec thanh cong.");
+  expect(container.querySelector('article[data-booking-id="44"]')).toBeNull();
+  expect(container.querySelector('article[data-booking-id="45"]')).not.toBeNull();
+});
+
 test("cash collection requires confirmation and only server success shows paid", async () => {
   jobs = [{ ...jobs[0], status: "Completed", paymentMethod: "cash", paymentStatus: "Unpaid" }];
   const confirmation = jest.spyOn(window, "confirm").mockReturnValue(false);
@@ -33,15 +63,15 @@ test("cash collection requires confirmation and only server success shows paid",
     confirmation.mockReturnValue(true);
     confirmCashPayment.mockRejectedValueOnce({ response: { data: { message: "Không thể ghi nhận." } } });
     await act(async () => button("Xác nhận đã nhận tiền mặt").click());
-    expect(container.textContent).toContain("Chưa thanh toán");
+    expect(container.textContent).toContain("Chưa có xác nhận nhận tiền mặt");
     expect(container.textContent).toContain("Không thể ghi nhận.");
     confirmCashPayment.mockImplementation(async () => {
       jobs = [{ ...jobs[0], paymentStatus: "Paid", paidAt: completedAt }];
     });
     await act(async () => button("Xác nhận đã nhận tiền mặt").click());
     expect(confirmCashPayment).toHaveBeenCalledWith(42);
-    expect(container.textContent).toContain("Đã thanh toán");
-    expect(container.textContent).toContain("Thu tiền:");
+    expect(container.textContent).toContain("Cleaner xác nhận đã nhận tiền mặt");
+    expect(container.textContent).toContain("Thời gian xác nhận:");
     expect(button("Xác nhận đã nhận tiền mặt")).toBeUndefined();
   } finally { confirmation.mockRestore(); }
 });

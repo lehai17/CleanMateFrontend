@@ -43,3 +43,7 @@ export async function confirmCashPayment(id) {
   const { data } = await api.put(`/api/cleaner/jobs/${id}/cash-payment`);
   return data;
 }
+
+export async function confirmOrderCompletion(id, feedback) {
+  return (await api.put(`/api/orders/${id}/confirm-completion`, feedback)).data;
+}
