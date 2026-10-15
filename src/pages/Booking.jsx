@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createBooking } from "../api/bookings";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
+import { phoneLink } from "../utils/contact";
 
 /* =========================
    Data & Helpers
@@ -543,6 +544,10 @@ function StepCustomer({
       );
       return;
     }
+    if (!phoneLink(phone) || phone.length > 40) {
+      alert("Số điện thoại liên hệ không hợp lệ (6 đến 15 chữ số).");
+      return;
+    }
     onNext();
   };
 
@@ -636,33 +641,15 @@ function StepCustomer({
                     type="radio"
                     name="payment"
                     value="cash"
-                    checked={customerInfo.paymentMethod === "cash"}
-                    onChange={(e) =>
-                      handleInputChange("paymentMethod", e.target.value)
-                    }
+                    checked
+                    readOnly
                     className="accent-emerald-600"
                   />
                   <span className="ml-2 text-emerald-800">
-                    💰 Thanh toán tiền mặt
+                    Tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca
                   </span>
                 </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="online"
-                    disabled
-                    checked={customerInfo.paymentMethod === "online"}
-                    onChange={(e) =>
-                      handleInputChange("paymentMethod", e.target.value)
-                    }
-                    className="accent-emerald-600"
-                  />
-                  <span className="ml-2 text-emerald-800">
-                    💳 Thanh toán online{" "}
-                    <span className="font-semibold">(Chưa hỗ trợ)</span>
-                  </span>
-                </label>
+                <p className="text-sm text-emerald-800">CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.</p>
               </div>
             </div>
           </div>
@@ -683,7 +670,7 @@ function StepCustomer({
             />
             {pricing.discount > 0 && (
               <Row
-                label="Giảm giá (5% online)"
+                label="Giảm giá"
                 value={`- ${pricing.discount.toLocaleString("vi-VN")}đ`}
                 className="text-emerald-700"
               />
@@ -838,9 +825,7 @@ function StepConfirm({
                 <div>
                   Thanh toán:{" "}
                   <span className="font-medium text-gray-900">
-                    {customer.paymentMethod === "cash"
-                      ? "Tiền mặt"
-                      : "Thanh toán online (giảm 5%)"}
+                    Tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca
                   </span>
                 </div>
                 {customer.notes?.trim() && (
@@ -869,7 +854,7 @@ function StepConfirm({
               {pricing.discount > 0 && (
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-emerald-700">
-                    Giảm giá (5% online):
+                    Giảm giá:
                   </span>
                   <span className="font-medium text-emerald-700">
                     -{pricing.discount.toLocaleString("vi-VN")}đ
@@ -959,7 +944,6 @@ function Success({ code, onNew, onHome }) {
    MAIN: Booking (4 bước)
 ========================= */
 export default function Booking() {
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -989,7 +973,7 @@ export default function Booking() {
         email: b.email || "",
         address: b.address || "",
         notes: b.notes || "",
-        paymentMethod: b.paymentMethod || "cash",
+        paymentMethod: "cash",
       });
     }
   }, [location.state]);
@@ -1026,11 +1010,7 @@ export default function Booking() {
     () => (service ? service.price * duration : 0),
     [service, duration]
   );
-  const discount = useMemo(
-    () =>
-      customerInfo.paymentMethod === "online" ? Math.round(subtotal * 0.05) : 0,
-    [customerInfo.paymentMethod, subtotal]
-  );
+  const discount = 0;
   const total = useMemo(
     () => Math.max(0, subtotal - discount),
     [subtotal, discount]
@@ -1063,29 +1043,9 @@ export default function Booking() {
   //   window.scrollTo({ top: 0, behavior: "smooth" });
   // };
   const onCustomerNext = () => {
-    const { name, phone, address, paymentMethod } = customerInfo;
+    const { name, phone, address } = customerInfo;
     if (!name.trim() || !phone.trim() || !address.trim()) return;
 
-    // Nếu chọn thanh toán online → chuyển đến trang QR MoMo
-    if (paymentMethod === "online") {
-      const bookingData = {
-        serviceName: service?.name,
-        date: selectedDate,
-        time: selectedTime,
-        duration,
-        price: total,
-        name: customerInfo.name,
-        phone: customerInfo.phone,
-        email: customerInfo.email,
-        address: customerInfo.address,
-        notes: customerInfo.notes,
-        paymentMethod: customerInfo.paymentMethod,
-      };
-      navigate("/payment-qr", { state: { booking: bookingData, fromStep: 3 } });
-      return;
-    }
-
-    // Ngược lại (tiền mặt) → đi bước xác nhận như cũ
     goNext();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1098,8 +1058,10 @@ export default function Booking() {
         StartTime: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
         DurationHours: Number(duration),
         Address: customerInfo.address,
+        ContactName: customerInfo.name,
+        ContactPhone: customerInfo.phone,
         Notes: customerInfo.notes,
-        PaymentMethod: customerInfo.paymentMethod,
+        PaymentMethod: "cash",
       });
 
       setSuccessCode("CM" + String(res.id).padStart(6, "0"));
