@@ -13,12 +13,15 @@ export default function Login() {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setError('');
     setLoading(true);
     try {
       const res = await loginApi(email, password);
@@ -31,7 +34,9 @@ export default function Login() {
         replace: true,
       });
     } catch (err) {
-      alert(err?.response?.data || "Đăng nhập thất bại.");
+      setPassword('');
+      const data=err?.response?.data;
+      setError(data?.message || (typeof data==='string' && data) || 'Sai email hoặc mật khẩu. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -54,10 +59,12 @@ export default function Login() {
         {(passwordChanged || location.state?.passwordChanged) && <p role="status" className="mb-4 text-emerald-800">Đã đổi mật khẩu. Vui lòng đăng nhập lại.</p>}
         {(sessionsRevoked || location.state?.sessionsRevoked) && <p role="status" className="mb-4 text-emerald-800">Đã đăng xuất tất cả thiết bị. Vui lòng đăng nhập lại.</p>}
         <form onSubmit={onSubmit} className="space-y-6">
+          {error && <p role="alert" className="text-red-700">{error}</p>}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
+              maxLength={254}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -71,6 +78,7 @@ export default function Login() {
             <div className="relative">
               <input
                 type={showPwd ? "text" : "password"}
+                maxLength={128}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
