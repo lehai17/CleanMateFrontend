@@ -1,3 +1,4 @@
+import { Ui, Raw } from './../ui/Preferences';
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 
@@ -10,15 +11,15 @@ export default function Cleaners() {
   }, []);
 
   return (
-    <div>
-      <h2>Cleaners</h2>
-      <ul>
+    <Ui as="div">
+      <Ui as="h2">Cleaners</Ui>
+      <Ui as="ul">
         {cleaners.map((c) => (
-          <li key={c.id}>
-            {c.name} - {c.city} - {c.hourlyRate} VND/h
-          </li>
+          <Ui as="li" key={c.id}>
+            {<Raw>{c.name}</Raw>} - {c.city} - {c.hourlyRate} VND/h
+          </Ui>
         ))}
-      </ul>
-    </div>
+      </Ui>
+    </Ui>
   );
 }

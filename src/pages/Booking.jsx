@@ -1,5 +1,7 @@
+import { Ui, Raw, t } from './../ui/Preferences';
 import React, { useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
+import { Link } from './../ui/Links';
 import { createBooking } from "../api/bookings";
 import { useAuth } from "../context/AuthContext";
 import { phoneLink } from "../utils/contact";
@@ -59,35 +61,35 @@ function ProgressSteps({ currentStep = 1 }) {
     id <= currentStep ? "text-emerald-700" : "text-slate-500";
 
   return (
-    <div className="bg-white border-b">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between">
+    <Ui as="div" className="bg-white border-b">
+      <Ui as="div" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Ui as="div" className="flex items-center justify-between">
           {steps.map((step, idx) => (
             <React.Fragment key={step.id}>
-              <div className="flex items-center gap-3">
-                <div
+              <Ui as="div" className="flex items-center gap-3">
+                <Ui as="div"
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${dotClass(
                     step.id
                   )}`}
                 >
                   {step.id}
-                </div>
-                <span
+                </Ui>
+                <Ui as="span"
                   className={`hidden sm:block text-sm font-medium ${textClass(
                     step.id
                   )}`}
                 >
                   {step.name}
-                </span>
-              </div>
+                </Ui>
+              </Ui>
               {idx < steps.length - 1 && (
-                <div className="flex-1 h-px bg-slate-200 mx-4" />
+                <Ui as="div" className="flex-1 h-px bg-slate-200 mx-4" />
               )}
             </React.Fragment>
           ))}
-        </div>
-      </div>
-    </div>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }
 
@@ -96,7 +98,7 @@ function ProgressSteps({ currentStep = 1 }) {
 ========================= */
 function ServiceCard({ k, data, selected, onSelect }) {
   return (
-    <button
+    <Ui as="button"
       type="button"
       onClick={() => onSelect(k)}
       className={`text-left rounded-2xl border-2 transition-all p-5 bg-white shadow-sm hover:shadow-md
@@ -108,15 +110,15 @@ function ServiceCard({ k, data, selected, onSelect }) {
         }
       `}
     >
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-emerald-50">
+      <Ui as="div" className="flex items-start gap-4">
+        <Ui as="div" className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-emerald-50">
           {data.icon}
-        </div>
-        <div className="flex-1">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
+        </Ui>
+        <Ui as="div" className="flex-1">
+          <Ui as="h3" className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
             {data.name}
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
+          </Ui>
+          <Ui as="p" className="text-sm text-gray-600 mb-3">
             {k === "cleaning" &&
               "Vệ sinh toàn bộ nhà cửa, lau chùi, hút bụi, sắp xếp đồ đạc"}
             {k === "cooking" &&
@@ -125,37 +127,37 @@ function ServiceCard({ k, data, selected, onSelect }) {
               "Giặt giũ, phơi khô, ủi là và sắp xếp quần áo gọn gàng"}
             {k === "childcare" &&
               "Trông trẻ, cho ăn, vui chơi và các hoạt động phù hợp"}
-          </p>
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
+          </Ui>
+          <Ui as="div" className="flex items-center justify-between">
+            <Ui as="span" className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
               {data.price.toLocaleString("vi-VN")}đ/giờ
-            </span>
-            <span
+            </Ui>
+            <Ui as="span"
               className="text-xs sm:text-sm inline-flex items-center gap-1 px-2 py-1 rounded-full
                              bg-emerald-50 text-emerald-700 border border-emerald-200"
             >
               Tối thiểu {data.minHours} giờ
-            </span>
-          </div>
-        </div>
-      </div>
-    </button>
+            </Ui>
+          </Ui>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }
 
 function StepService({ selected, setSelected, onNext, services }) {
   return (
     <>
-      <div className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
+      <Ui as="div" className="text-center mb-8">
+        <Ui as="h1" className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
           Chọn dịch vụ
-        </h1>
-        <p className="text-gray-600">
+        </Ui>
+        <Ui as="p" className="text-gray-600">
           Lựa chọn dịch vụ phù hợp với nhu cầu của bạn
-        </p>
-      </div>
+        </Ui>
+      </Ui>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <Ui as="div" className="grid md:grid-cols-2 gap-6">
         {Object.entries(services).map(([k, v]) => (
           <ServiceCard
             key={k}
@@ -165,10 +167,10 @@ function StepService({ selected, setSelected, onNext, services }) {
             onSelect={setSelected}
           />
         ))}
-      </div>
+      </Ui>
 
-      <div className="mt-8 flex items-center justify-center">
-        <button
+      <Ui as="div" className="mt-8 flex items-center justify-center">
+        <Ui as="button"
           onClick={onNext}
           disabled={!selected}
           className="inline-flex items-center justify-center rounded-xl px-8 py-3 font-semibold text-white shadow transition
@@ -177,8 +179,8 @@ function StepService({ selected, setSelected, onNext, services }) {
                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
         >
           Tiếp tục
-        </button>
-      </div>
+        </Ui>
+      </Ui>
     </>
   );
 }
@@ -244,11 +246,11 @@ function Calendar({ selectedDate, onDateSelect }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Chọn ngày</h3>
+    <Ui as="div" className="bg-white rounded-xl shadow-sm p-6">
+      <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">Chọn ngày</Ui>
 
-      <div className="flex items-center justify-between mb-4">
-        <button
+      <Ui as="div" className="flex items-center justify-between mb-4">
+        <Ui as="button"
           onClick={previousMonth}
           className="p-2 hover:bg-gray-100 rounded-lg"
           aria-label="Tháng trước"
@@ -266,11 +268,11 @@ function Calendar({ selectedDate, onDateSelect }) {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-        </button>
-        <h4 className="text-lg font-semibold">
+        </Ui>
+        <Ui as="h4" className="text-lg font-semibold">
           {monthNames[currentMonth]}, {currentYear}
-        </h4>
-        <button
+        </Ui>
+        <Ui as="button"
           onClick={nextMonth}
           className="p-2 hover:bg-gray-100 rounded-lg"
           aria-label="Tháng sau"
@@ -288,23 +290,23 @@ function Calendar({ selectedDate, onDateSelect }) {
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </button>
-      </div>
+        </Ui>
+      </Ui>
 
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <Ui as="div" className="grid grid-cols-7 gap-1 mb-2">
         {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map((w) => (
-          <div
+          <Ui as="div"
             key={w}
             className="text-center text-sm font-medium text-gray-500 py-2"
           >
             {w}
-          </div>
+          </Ui>
         ))}
-      </div>
+      </Ui>
 
-      <div className="grid grid-cols-7 gap-1">
+      <Ui as="div" className="grid grid-cols-7 gap-1">
         {days.map((cell, idx) => {
-          if (!cell) return <div key={`e-${idx}`} />;
+          if (!cell) return <Ui as="div" key={`e-${idx}`} />;
           const { d, dateStr, isToday, isPast, isSelected } = cell;
 
           const base = "p-3 text-center rounded-lg transition-all select-none";
@@ -317,18 +319,18 @@ function Calendar({ selectedDate, onDateSelect }) {
             : "hover:bg-gray-100 cursor-pointer";
 
           return (
-            <div
+            <Ui as="div"
               key={dateStr}
               className={`${base} ${state}`}
               onClick={!isPast ? () => onDateSelect(dateStr) : undefined}
               title={dateStr}
             >
               {d}
-            </div>
+            </Ui>
           );
         })}
-      </div>
-    </div>
+      </Ui>
+    </Ui>
   );
 }
 
@@ -377,15 +379,15 @@ function TimeAndDuration({
   }, [selectedDate, selectedTime]);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <Ui as="div" className="bg-white rounded-xl shadow-sm p-6">
+      <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">
         Chọn giờ & thời lượng
-      </h3>
+      </Ui>
 
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
         Giờ bắt đầu
-      </label>
-      <input
+      </Ui>
+      <Ui as="input"
         type="time"
         step={60}
         min={minTime}
@@ -394,54 +396,54 @@ function TimeAndDuration({
         onChange={(e) => setSelectedTime(e.target.value)}
         className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600"
       />
-      <p className="mt-2 text-xs text-gray-500">
+      <Ui as="p" className="mt-2 text-xs text-gray-500">
         Bạn có thể chọn bất kỳ thời điểm nào trong ngày (độ phân giải 1 phút).
-      </p>
+      </Ui>
 
       {!isTimeValid && selectedTime && selectedDate === TODAY_STR && (
-        <div className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <Ui as="div" className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
           Giờ bạn chọn đã qua so với thời điểm hiện tại. Vui lòng chọn giờ lớn
           hơn.
-        </div>
+        </Ui>
       )}
 
-      <div className="mt-6">
-        <h4 className="font-medium text-gray-900 mb-3">Thời gian làm việc</h4>
-        <div className="flex items-center gap-4">
-          <button
+      <Ui as="div" className="mt-6">
+        <Ui as="h4" className="font-medium text-gray-900 mb-3">Thời gian làm việc</Ui>
+        <Ui as="div" className="flex items-center gap-4">
+          <Ui as="button"
             onClick={() => adjust(-1)} // ⬅️ trừ 1 giờ
             className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
           >
             -
-          </button>
-          <div className="flex-1 text-center">
-            <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
+          </Ui>
+          <Ui as="div" className="flex-1 text-center">
+            <Ui as="div" className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
               {Number.isInteger(duration)
                 ? duration
                 : Math.round(Number(duration) || MIN_HOURS)}
-            </div>
-            <div className="text-sm text-gray-500">
+            </Ui>
+            <Ui as="div" className="text-sm text-gray-500">
               giờ (tối thiểu {MIN_HOURS} giờ)
-            </div>
-          </div>
-          <button
+            </Ui>
+          </Ui>
+          <Ui as="button"
             onClick={() => adjust(1)} // ⬅️ cộng 1 giờ
             className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
           >
             +
-          </button>
-        </div>
+          </Ui>
+        </Ui>
 
-        <div className="mt-3 text-center">
-          <div className="text-lg font-semibold text-gray-900">
+        <Ui as="div" className="mt-3 text-center">
+          <Ui as="div" className="text-lg font-semibold text-gray-900">
             Tổng tiền:{" "}
-            <span className="text-emerald-600">
+            <Ui as="span" className="text-emerald-600">
               {totalPrice.toLocaleString("vi-VN")}đ
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Ui>
+          </Ui>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }
 
@@ -474,23 +476,23 @@ function StepTime({
 
   return (
     <>
-      <div className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
+      <Ui as="div" className="text-center mb-8">
+        <Ui as="h1" className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
           Chọn thời gian
-        </h1>
-        <p className="text-gray-600">
+        </Ui>
+        <Ui as="p" className="text-gray-600">
           Lựa chọn ngày & giờ phù hợp với lịch trình của bạn
-        </p>
+        </Ui>
         {service && (
-          <div className="mt-3 text-sm text-gray-600">
-            Dịch vụ: <span className="font-semibold">{service.name}</span> •
+          <Ui as="div" className="mt-3 text-sm text-gray-600">
+            Dịch vụ: <Ui as="span" className="font-semibold">{service.name}</Ui> •
             Giá: {service.price.toLocaleString("vi-VN")}đ/giờ • Tối thiểu{" "}
             {service.minHours}h
-          </div>
+          </Ui>
         )}
-      </div>
+      </Ui>
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <Ui as="div" className="grid lg:grid-cols-2 gap-8">
         <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         <TimeAndDuration
           service={service}
@@ -501,16 +503,16 @@ function StepTime({
           setSelectedTime={setSelectedTime}
           totalPrice={totalPrice}
         />
-      </div>
+      </Ui>
 
-      <div className="mt-8 flex justify-between">
-        <button
+      <Ui as="div" className="mt-8 flex justify-between">
+        <Ui as="button"
           onClick={onBack}
           className="px-8 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
         >
           Quay lại
-        </button>
-        <button
+        </Ui>
+        <Ui as="button"
           onClick={onNext}
           disabled={!canNext}
           className="px-8 py-3 rounded-lg font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-50
@@ -518,8 +520,8 @@ function StepTime({
                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
         >
           Tiếp tục
-        </button>
-      </div>
+        </Ui>
+      </Ui>
     </>
   );
 }
@@ -542,12 +544,12 @@ function StepCustomer({
     const { name, phone, address } = customerInfo;
     if (!name.trim() || !phone.trim() || !address.trim()) {
       alert(
-        "Vui lòng điền đầy đủ thông tin bắt buộc (Họ tên, Số điện thoại, Địa chỉ)"
+        t("Vui lòng điền đầy đủ thông tin bắt buộc (Họ tên, Số điện thoại, Địa chỉ)")
       );
       return;
     }
     if (!phoneLink(phone) || phone.length > 40) {
-      alert("Số điện thoại liên hệ không hợp lệ (6 đến 15 chữ số).");
+      alert(t("Số điện thoại liên hệ không hợp lệ (6 đến 15 chữ số)."));
       return;
     }
     onNext();
@@ -555,91 +557,91 @@ function StepCustomer({
 
   return (
     <>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+      <Ui as="div" className="text-center mb-8">
+        <Ui as="h2" className="text-3xl font-bold text-gray-900 mb-2">
           Thông tin khách hàng
-        </h2>
-        <p className="text-gray-600">
+        </Ui>
+        <Ui as="p" className="text-gray-600">
           Vui lòng cung cấp thông tin để chúng tôi liên lạc và cung cấp dịch vụ
-        </p>
-      </div>
+        </Ui>
+      </Ui>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-8">
-          <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+      <Ui as="div" className="grid lg:grid-cols-3 gap-8">
+        <Ui as="div" className="lg:col-span-2 bg-white rounded-xl shadow-sm p-8">
+          <Ui as="div" className="space-y-6">
+            <Ui as="div" className="grid md:grid-cols-2 gap-6">
+              <Ui as="div">
+                <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
                   Họ và tên *
-                </label>
-                <input
+                </Ui>
+                <Ui as="input"
                   type="text"
                   value={customerInfo.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                   placeholder="Nhập họ và tên"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              </Ui>
+              <Ui as="div">
+                <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
                   Số điện thoại *
-                </label>
-                <input
+                </Ui>
+                <Ui as="input"
                   type="tel"
                   value={customerInfo.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                   placeholder="Nhập số điện thoại"
                 />
-              </div>
-            </div>
+              </Ui>
+            </Ui>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Ui as="div">
+              <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
-              </label>
-              <input
+              </Ui>
+              <Ui as="input"
                 type="email"
                 value={customerInfo.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 placeholder="Nhập địa chỉ email"
               />
-            </div>
+            </Ui>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Ui as="div">
+              <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
                 Địa chỉ *
-              </label>
-              <textarea
+              </Ui>
+              <Ui as="textarea"
                 rows={3}
                 value={customerInfo.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 placeholder="Nhập địa chỉ chi tiết (số nhà, đường, phường/xã, quận/huyện)"
               />
-            </div>
+            </Ui>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Ui as="div">
+              <Ui as="label" className="block text-sm font-medium text-gray-700 mb-2">
                 Ghi chú đặc biệt
-              </label>
-              <textarea
+              </Ui>
+              <Ui as="textarea"
                 rows={3}
                 value={customerInfo.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 placeholder="Yêu cầu đặc biệt, hướng dẫn đến địa chỉ, lưu ý về thú cưng..."
               />
-            </div>
+            </Ui>
 
-            <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
-              <h4 className="font-medium text-emerald-900 mb-2">
+            <Ui as="div" className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
+              <Ui as="h4" className="font-medium text-emerald-900 mb-2">
                 Phương thức thanh toán
-              </h4>
-              <div className="space-y-2">
-                <label className="flex items-center cursor-pointer">
-                  <input
+              </Ui>
+              <Ui as="div" className="space-y-2">
+                <Ui as="label" className="flex items-center cursor-pointer">
+                  <Ui as="input"
                     type="radio"
                     name="payment"
                     value="cash"
@@ -647,21 +649,21 @@ function StepCustomer({
                     readOnly
                     className="accent-emerald-600"
                   />
-                  <span className="ml-2 text-emerald-800">
+                  <Ui as="span" className="ml-2 text-emerald-800">
                     Tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca
-                  </span>
-                </label>
-                <p className="text-sm text-emerald-800">CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+                  </Ui>
+                </Ui>
+                <Ui as="p" className="text-sm text-emerald-800">CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.</Ui>
+              </Ui>
+            </Ui>
+          </Ui>
+        </Ui>
 
-        <aside className="bg-white rounded-xl shadow-sm p-6 h-max">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <Ui as="aside" className="bg-white rounded-xl shadow-sm p-6 h-max">
+          <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">
             Tóm tắt đơn hàng
-          </h3>
-          <div className="space-y-3 text-sm">
+          </Ui>
+          <Ui as="div" className="space-y-3 text-sm">
             <Row label="Dịch vụ" value={pricing.serviceName} />
             <Row label="Ngày" value={pricing.date} />
             <Row label="Giờ bắt đầu" value={pricing.time} />
@@ -677,42 +679,42 @@ function StepCustomer({
                 className="text-emerald-700"
               />
             )}
-            <div className="pt-3 mt-3 border-t border-gray-200 flex items-center justify-between">
-              <span className="font-semibold text-gray-900">Tổng cộng</span>
-              <span className="text-lg font-bold text-emerald-600">
+            <Ui as="div" className="pt-3 mt-3 border-t border-gray-200 flex items-center justify-between">
+              <Ui as="span" className="font-semibold text-gray-900">Tổng cộng</Ui>
+              <Ui as="span" className="text-lg font-bold text-emerald-600">
                 {pricing.total.toLocaleString("vi-VN")}đ
-              </span>
-            </div>
-          </div>
-        </aside>
-      </div>
+              </Ui>
+            </Ui>
+          </Ui>
+        </Ui>
+      </Ui>
 
-      <div className="mt-8 flex justify-between">
-        <button
+      <Ui as="div" className="mt-8 flex justify-between">
+        <Ui as="button"
           onClick={onBack}
           className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
         >
           Quay lại
-        </button>
-        <button
+        </Ui>
+        <Ui as="button"
           onClick={validateAndNext}
           className="px-8 py-3 rounded-lg font-semibold text-white shadow
                      bg-gradient-to-r from-emerald-600 to-amber-500 hover:opacity-95
                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
         >
           Tiếp tục
-        </button>
-      </div>
+        </Ui>
+      </Ui>
     </>
   );
 }
 
 function Row({ label, value, className = "" }) {
   return (
-    <div className={`flex items-center justify-between ${className}`}>
-      <span className="text-gray-600">{label}</span>
-      <span className="text-gray-900 font-medium">{value}</span>
-    </div>
+    <Ui as="div" className={`flex items-center justify-between ${className}`}>
+      <Ui as="span" className="text-gray-600">{label}</Ui>
+      <Ui as="span" className="text-gray-900 font-medium">{value}</Ui>
+    </Ui>
   );
 }
 
@@ -744,148 +746,148 @@ function StepConfirm({
   if (!service || !customer) return null;
   return (
     <>
-      <div className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
+      <Ui as="div" className="text-center mb-8">
+        <Ui as="h1" className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
           Xác nhận đặt lịch
-        </h1>
-        <p className="text-gray-600">
+        </Ui>
+        <Ui as="p" className="text-gray-600">
           Vui lòng kiểm tra lại thông tin trước khi xác nhận
-        </p>
-      </div>
+        </Ui>
+      </Ui>
 
-      <div className="bg-white rounded-xl shadow-sm p-8">
-        <div className="space-y-8">
-          <section className="border-b pb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <Ui as="div" className="bg-white rounded-xl shadow-sm p-8">
+        <Ui as="div" className="space-y-8">
+          <Ui as="section" className="border-b pb-6">
+            <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">
               Thông tin dịch vụ
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-xl">
+            </Ui>
+            <Ui as="div" className="grid md:grid-cols-2 gap-6">
+              <Ui as="div" className="flex items-center gap-3">
+                <Ui as="div" className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-xl">
                   {service.icon}
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">
+                </Ui>
+                <Ui as="div">
+                  <Ui as="div" className="font-medium text-gray-900">
                     {service.name}
-                  </div>
-                  <div className="text-emerald-600">
+                  </Ui>
+                  <Ui as="div" className="text-emerald-600">
                     {service.price.toLocaleString("vi-VN")}đ/giờ
-                  </div>
-                </div>
-              </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                <div>
+                  </Ui>
+                </Ui>
+              </Ui>
+              <Ui as="div" className="text-sm text-gray-600 space-y-1">
+                <Ui as="div">
                   Ngày:{" "}
-                  <span className="font-medium text-gray-900">
+                  <Ui as="span" className="font-medium text-gray-900">
                     {formatDateVN(date)}
-                  </span>
-                </div>
-                <div>
-                  Giờ: <span className="font-medium text-gray-900">{time}</span>
-                </div>
-                <div>
+                  </Ui>
+                </Ui>
+                <Ui as="div">
+                  Giờ: <Ui as="span" className="font-medium text-gray-900">{time}</Ui>
+                </Ui>
+                <Ui as="div">
                   Thời lượng:{" "}
-                  <span className="font-medium text-gray-900">
+                  <Ui as="span" className="font-medium text-gray-900">
                     {duration} giờ
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
+                  </Ui>
+                </Ui>
+              </Ui>
+            </Ui>
+          </Ui>
 
-          <section className="border-b pb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <Ui as="section" className="border-b pb-6">
+            <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">
               Thông tin khách hàng
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2 text-sm">
-                <div>
+            </Ui>
+            <Ui as="div" className="grid md:grid-cols-2 gap-6">
+              <Ui as="div" className="space-y-2 text-sm">
+                <Ui as="div">
                   Họ tên:{" "}
-                  <span className="font-medium text-gray-900">
-                    {customer.name}
-                  </span>
-                </div>
-                <div>
+                  <Ui as="span" className="font-medium text-gray-900">
+                    {<Raw>{customer.name}</Raw>}
+                  </Ui>
+                </Ui>
+                <Ui as="div">
                   Điện thoại:{" "}
-                  <span className="font-medium text-gray-900">
-                    {customer.phone}
-                  </span>
-                </div>
-                <div>
+                  <Ui as="span" className="font-medium text-gray-900">
+                    {<Raw>{customer.phone}</Raw>}
+                  </Ui>
+                </Ui>
+                <Ui as="div">
                   Email:{" "}
-                  <span className="font-medium text-gray-900">
-                    {customer.email || "Không có"}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div>
+                  <Ui as="span" className="font-medium text-gray-900">
+                    {<Raw>{customer.email || "Không có"}</Raw>}
+                  </Ui>
+                </Ui>
+              </Ui>
+              <Ui as="div" className="space-y-2 text-sm">
+                <Ui as="div">
                   Địa chỉ:{" "}
-                  <span className="font-medium text-gray-900">
-                    {customer.address}
-                  </span>
-                </div>
-                <div>
+                  <Ui as="span" className="font-medium text-gray-900">
+                    {<Raw>{customer.address}</Raw>}
+                  </Ui>
+                </Ui>
+                <Ui as="div">
                   Thanh toán:{" "}
-                  <span className="font-medium text-gray-900">
+                  <Ui as="span" className="font-medium text-gray-900">
                     Tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca
-                  </span>
-                </div>
+                  </Ui>
+                </Ui>
                 {customer.notes?.trim() && (
-                  <div>
+                  <Ui as="div">
                     Ghi chú:{" "}
-                    <span className="font-medium text-gray-900">
-                      {customer.notes}
-                    </span>
-                  </div>
+                    <Ui as="span" className="font-medium text-gray-900">
+                      {<Raw>{customer.notes}</Raw>}
+                    </Ui>
+                  </Ui>
                 )}
-              </div>
-            </div>
-          </section>
+              </Ui>
+            </Ui>
+          </Ui>
 
-          <section>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <Ui as="section">
+            <Ui as="h3" className="text-lg font-semibold text-gray-900 mb-4">
               Chi tiết thanh toán
-            </h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Tạm tính:</span>
-                <span className="font-medium">
+            </Ui>
+            <Ui as="div" className="bg-gray-50 p-4 rounded-lg">
+              <Ui as="div" className="flex justify-between items-center mb-2">
+                <Ui as="span" className="text-gray-600">Tạm tính:</Ui>
+                <Ui as="span" className="font-medium">
                   {pricing.subtotal.toLocaleString("vi-VN")}đ
-                </span>
-              </div>
+                </Ui>
+              </Ui>
               {pricing.discount > 0 && (
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-emerald-700">
+                <Ui as="div" className="flex justify-between items-center mb-2">
+                  <Ui as="span" className="text-emerald-700">
                     Giảm giá:
-                  </span>
-                  <span className="font-medium text-emerald-700">
+                  </Ui>
+                  <Ui as="span" className="font-medium text-emerald-700">
                     -{pricing.discount.toLocaleString("vi-VN")}đ
-                  </span>
-                </div>
+                  </Ui>
+                </Ui>
               )}
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">
+              <Ui as="div" className="border-t pt-2 mt-2">
+                <Ui as="div" className="flex justify-between items-center">
+                  <Ui as="span" className="text-lg font-semibold text-gray-900">
                     Tổng cộng:
-                  </span>
-                  <span className="text-2xl font-bold text-emerald-600">
+                  </Ui>
+                  <Ui as="span" className="text-2xl font-bold text-emerald-600">
                     {pricing.total.toLocaleString("vi-VN")}đ
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
+                  </Ui>
+                </Ui>
+              </Ui>
+            </Ui>
+          </Ui>
 
-          <div className="mt-8 flex justify-between">
-            <button
+          <Ui as="div" className="mt-8 flex justify-between">
+            <Ui as="button"
               onClick={onBack}
               disabled={submitting}
               className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
             >
               Quay lại
-            </button>
-            <button
+            </Ui>
+            <Ui as="button"
               onClick={onConfirm}
               disabled={submitting}
               className="px-8 py-3 rounded-lg font-semibold text-white shadow
@@ -893,10 +895,10 @@ function StepConfirm({
                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
             >
               {submitting ? "Đang đặt lịch..." : "Xác nhận đặt lịch"}
-            </button>
-          </div>
-        </div>
-      </div>
+            </Ui>
+          </Ui>
+        </Ui>
+      </Ui>
     </>
   );
 }
@@ -906,42 +908,42 @@ function StepConfirm({
 ========================= */
 function Success({ code, onNew, onHome }) {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="bg-white rounded-xl shadow-sm p-10 text-center">
-        <div className="text-6xl mb-6">✅</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">
+    <Ui as="div" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Ui as="div" className="bg-white rounded-xl shadow-sm p-10 text-center">
+        <Ui as="div" className="text-6xl mb-6">✅</Ui>
+        <Ui as="h1" className="text-3xl font-bold text-gray-900 mb-3">
           Đặt lịch thành công!
-        </h1>
-        <p className="text-gray-600 mb-8">
+        </Ui>
+        <Ui as="p" className="text-gray-600 mb-8">
           Cảm ơn bạn đã tin tưởng CleanMate. Chúng tôi sẽ liên hệ trong thời
           gian sớm nhất để xác nhận chi tiết.
-        </p>
+        </Ui>
 
-        <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-lg mb-8">
-          <h3 className="font-semibold text-emerald-900 mb-2">
+        <Ui as="div" className="bg-emerald-50 border border-emerald-200 p-6 rounded-lg mb-8">
+          <Ui as="h3" className="font-semibold text-emerald-900 mb-2">
             Mã đặt lịch của bạn:
-          </h3>
-          <div className="text-2xl font-bold text-emerald-700">{code}</div>
-        </div>
+          </Ui>
+          <Ui as="div" className="text-2xl font-bold text-emerald-700">{code}</Ui>
+        </Ui>
 
-        <div className="space-y-3">
-          <button
+        <Ui as="div" className="space-y-3">
+          <Ui as="button"
             onClick={onNew}
             className="w-full px-8 py-3 rounded-lg font-semibold text-white shadow
                        bg-gradient-to-r from-emerald-600 to-amber-500 hover:opacity-95
                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
           >
             Đặt lịch mới
-          </button>
+          </Ui>
           <Link
             to="/"
             className="block w-full bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
           >
             Về trang chủ
           </Link>
-        </div>
-      </div>
-    </div>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }
 
@@ -960,9 +962,9 @@ export default function Booking() {
     ...SERVICE_PRESENTATION[s.key], name: s.name, price: s.hourlyRate, minHours: s.minHours, maxHours: s.maxHours,
   }]))); }).catch(() => { if (request === catalogRequest.current) setError("Không thể tải dịch vụ và giá. Vui lòng thử lại."); }); }, []);
   React.useEffect(() => { load(); return () => { catalogRequest.current++; }; }, [load, location.state?.rebookKey, user?.id]);
-  if (error) return <main className="p-8"><p role="alert">{error}</p><button onClick={load}>Thử lại</button></main>;
-  if (!services) return <main className="p-8">Đang tải dịch vụ...</main>;
-  if (!Object.keys(services).length) return <main className="p-8">Hiện chưa có dịch vụ mở đặt lịch.</main>;
+  if (error) return <Ui as="main" className="p-8"><Ui as="p" role="alert">{error}</Ui><Ui as="button" onClick={load}>Thử lại</Ui></Ui>;
+  if (!services) return <Ui as="main" className="p-8">Đang tải dịch vụ...</Ui>;
+  if (!Object.keys(services).length) return <Ui as="main" className="p-8">Hiện chưa có dịch vụ mở đặt lịch.</Ui>;
   return <BookingFlow key={`${user?.id}:${location.state?.rebookKey || 'new'}`} services={services}
     rebook={rebookingDraft(location.state?.rebook, services, user)} />;
 }
@@ -1107,7 +1109,7 @@ function BookingFlow({ services: SERVICES, rebook }) {
         status: err?.response?.status,
         data: err?.response?.data,
       });
-      alert(err?.response?.data?.message || "Đặt lịch thất bại");
+      alert(t(err?.response?.data?.message || "Đặt lịch thất bại"));
     } finally { sending.current = false; setSubmitting(false); }
   };
 
@@ -1142,13 +1144,13 @@ function BookingFlow({ services: SERVICES, rebook }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <Ui as="div" className="min-h-screen bg-gray-50 text-gray-800">
       {currentStep >= 1 && currentStep <= 4 && (
         <ProgressSteps currentStep={currentStep} />
       )}
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {rebookMessage && currentStep !== 99 && <p role="status" className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">{rebookMessage}</p>}
+      <Ui as="main" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {rebookMessage && currentStep !== 99 && <Ui as="p" role="status" className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">{rebookMessage}</Ui>}
         {currentStep === 1 && (
           <StepService
             services={SERVICES}
@@ -1206,7 +1208,7 @@ function BookingFlow({ services: SERVICES, rebook }) {
             }}
           />
         )}
-      </main>
-    </div>
+      </Ui>
+    </Ui>
   );
 }

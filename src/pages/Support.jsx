@@ -1,3 +1,4 @@
+import { Ui, Raw } from './../ui/Preferences';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {api} from '../api/axios';
 import SupportConversation from '../components/SupportConversation';
@@ -20,13 +21,13 @@ export default function Support() {
       if(page!==1)setPage(1);else await load();
     }catch(e){setMessage(e?.response?.data?.message || e.message || 'Không thể gửi. Vui lòng thử lại.');}finally{pending.current=false;setBusy(false);}
   };
-  return <main className="mx-auto max-w-3xl px-4 py-8"><h1 className="text-2xl font-bold">Hỗ trợ đơn hàng</h1><p className="my-4">Báo sự cố lịch làm, chất lượng hoặc tiền mặt trực tiếp. Staff sẽ phản hồi tại đây; yêu cầu không tự thay đổi đơn hay thu/hoàn tiền.</p>
-    <form onSubmit={submit} className="grid gap-4 rounded-xl border p-5">
-      <label>Mã đơn<input aria-label="Mã đơn" name="bookingId" placeholder="Ví dụ: CM123" maxLength={12} required list="support-bookings" className="block w-full rounded border p-2" /></label><datalist id="support-bookings">{bookings.map(b=><option key={b.id} value={`CM${b.id}`}>{b.address}</option>)}</datalist>
-      <label>Loại sự cố<select name="category" aria-label="Loại sự cố" className="block w-full rounded border p-2">{Object.entries(categories).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
-      <label>Mô tả<textarea name="description" aria-label="Mô tả" minLength={10} maxLength={2000} rows={4} required className="block w-full rounded border p-2" /></label><p role="status">{message}</p><button disabled={busy} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-50">{busy?'Đang gửi...':'Gửi yêu cầu hỗ trợ'}</button>
-    </form><h2 className="my-5 text-xl font-semibold">Yêu cầu của tôi</h2><button onClick={load} disabled={loading} className="rounded border px-3 py-2">Tải lại hỗ trợ</button>{error&&<p role="alert">{error}</p>}{loading&&<p>Đang tải...</p>}
-    {data.items.map(item=><article key={item.id} data-support-id={item.id} className="my-4 rounded-xl border p-4"><h3 className="font-semibold">HT{item.id} · CM{item.bookingId}</h3><p>{statuses[item.status]} · {categories[item.category]}</p><p className="my-3 whitespace-pre-wrap">{item.description}</p><p className="whitespace-pre-wrap">{item.response?`Phản hồi từ staff: ${item.response}`:'Nhân viên chưa phản hồi.'}</p><SupportConversation ticketId={item.id} onUpdated={load} /></article>)}
-    {!loading&&!error&&!data.items.length&&<p>Bạn chưa có yêu cầu hỗ trợ.</p>}<p>Trang {page} · {data.total} yêu cầu</p><button disabled={loading||page===1} onClick={()=>setPage(page-1)}>Trang trước</button> <button disabled={loading||page*20>=data.total} onClick={()=>setPage(page+1)}>Trang sau</button>
-  </main>;
+  return <Ui as="main" className="mx-auto max-w-3xl px-4 py-8"><Ui as="h1" className="text-2xl font-bold">Hỗ trợ đơn hàng</Ui><Ui as="p" className="my-4">Báo sự cố lịch làm, chất lượng hoặc tiền mặt trực tiếp. Staff sẽ phản hồi tại đây; yêu cầu không tự thay đổi đơn hay thu/hoàn tiền.</Ui>
+    <Ui as="form" onSubmit={submit} className="grid gap-4 rounded-xl border p-5">
+      <Ui as="label">Mã đơn<Ui as="input" aria-label="Mã đơn" name="bookingId" placeholder="Ví dụ: CM123" maxLength={12} required list="support-bookings" className="block w-full rounded border p-2" /></Ui><Ui as="datalist" id="support-bookings">{bookings.map(b=><Ui as="option" key={b.id} value={`CM${b.id}`}>{<Raw>{b.address}</Raw>}</Ui>)}</Ui>
+      <Ui as="label">Loại sự cố<Ui as="select" name="category" aria-label="Loại sự cố" className="block w-full rounded border p-2">{Object.entries(categories).map(([key,label])=><Ui as="option" key={key} value={key}>{label}</Ui>)}</Ui></Ui>
+      <Ui as="label">Mô tả<Ui as="textarea" name="description" aria-label="Mô tả" minLength={10} maxLength={2000} rows={4} required className="block w-full rounded border p-2" /></Ui><Ui as="p" role="status">{message}</Ui><Ui as="button" disabled={busy} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-50">{busy?'Đang gửi...':'Gửi yêu cầu hỗ trợ'}</Ui>
+    </Ui><Ui as="h2" className="my-5 text-xl font-semibold">Yêu cầu của tôi</Ui><Ui as="button" onClick={load} disabled={loading} className="rounded border px-3 py-2">Tải lại hỗ trợ</Ui>{error&&<Ui as="p" role="alert">{error}</Ui>}{loading&&<Ui as="p">Đang tải...</Ui>}
+    {data.items.map(item=><Ui as="article" key={item.id} data-support-id={item.id} className="my-4 rounded-xl border p-4"><Ui as="h3" className="font-semibold">HT{item.id} · CM{item.bookingId}</Ui><Ui as="p">{statuses[item.status]} · {categories[item.category]}</Ui><Ui as="p" className="my-3 whitespace-pre-wrap">{<Raw>{item.description}</Raw>}</Ui><Ui as="p" className="whitespace-pre-wrap">{item.response?<><Ui as="span">Phản hồi từ staff:</Ui> <Raw>{item.response}</Raw></>:'Nhân viên chưa phản hồi.'}</Ui><SupportConversation ticketId={item.id} onUpdated={load} /></Ui>)}
+    {!loading&&!error&&!data.items.length&&<Ui as="p">Bạn chưa có yêu cầu hỗ trợ.</Ui>}<Ui as="p">Trang {page} · {data.total} yêu cầu</Ui><Ui as="button" disabled={loading||page===1} onClick={()=>setPage(page-1)}>Trang trước</Ui> <Ui as="button" disabled={loading||page*20>=data.total} onClick={()=>setPage(page+1)}>Trang sau</Ui>
+  </Ui>;
 }

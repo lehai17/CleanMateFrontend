@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Ui } from './../ui/Preferences';
+import { Link } from './../ui/Links';
 import { useNotifications } from "../context/NotificationContext";
 
 export default function NotificationLink() {
@@ -7,7 +8,7 @@ export default function NotificationLink() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
     </svg>
-    <span className="hidden xl:inline">Thông báo</span>
-    {unreadCount > 0 && <span data-testid="notification-unread-count" className="rounded-full bg-red-600 px-1.5 text-xs text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
+    <Ui as="span" className="hidden xl:inline">Thông báo</Ui>
+    {unreadCount > 0 && <Ui as="span" data-testid="notification-unread-count" className="rounded-full bg-red-600 px-1.5 text-xs text-white">{unreadCount > 99 ? "99+" : unreadCount}</Ui>}
   </Link>;
 }
