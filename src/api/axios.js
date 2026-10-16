@@ -5,7 +5,7 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("cm_token");
+  const token = config.cleanmateToken !== undefined ? config.cleanmateToken : localStorage.getItem("cm_token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
