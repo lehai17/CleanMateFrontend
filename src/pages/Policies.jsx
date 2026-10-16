@@ -1,21 +1,18 @@
-import { Ui } from './../ui/Preferences';
+import { Ui, useUiPreferences } from './../ui/Preferences';
 // src/pages/Policies.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export default function Policies() {
-  const API_URL = process.env.REACT_APP_API_URL;
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "terms";
-  const [active, setActive] = useState(defaultTab);
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get("tab");
+  const active = ["terms", "privacy", "service", "payment", "refund"].includes(requested) ? requested : "terms";
+  const { language } = useUiPreferences();
   const contentTopRef = useRef(null);
-  // const [active, setActive] = useState("terms"); // 'terms' | 'privacy' | 'service' | 'payment' | 'refund'
 
   useEffect(() => {
-    document.title = "Điều khoản & Chính sách - CleanMate";
-  }, []);
+    document.title = language === "en" ? "Terms & policies - CleanMate" : "Điều khoản & Chính sách - CleanMate";
+  }, [language]);
 
   const tabs = useMemo(
     () => [
@@ -29,7 +26,7 @@ export default function Policies() {
   );
 
   const setTab = (id) => {
-    setActive(id);
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.set("tab", id); return next; });
     // scroll lên đầu vùng nội dung
     contentTopRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -63,6 +60,8 @@ export default function Policies() {
                   const isActive = active === t.id;
                   return (
                     <Ui as="button"
+                      type="button"
+                      aria-current={isActive ? "page" : undefined}
                       key={t.id}
                       onClick={() => setTab(t.id)}
                       className={[
