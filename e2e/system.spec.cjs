@@ -4,6 +4,22 @@ const { randomUUID } = require("node:crypto");
 const API = "http://127.0.0.1:15238";
 const PORTAL = "http://127.0.0.1:15080";
 const PASSWORD = "CleanMate-system-test-123!";
+
+test('customer retries a committed support report without duplication and reads staff resolution',async({page,request})=>{
+  const customer=await account(request),job=await apiBooking(request,customer);await login(page,customer.email);await page.goto('/support');
+  await page.getByLabel('Mã đơn',{exact:true}).fill(`CM${job.id}`);await page.getByLabel('Mô tả',{exact:true}).fill('Không liên hệ được cleaner trước ca làm.');
+  let firstPayload,receipt;
+  await page.route(`${API}/api/support`,async route=>{
+    if(receipt)return route.continue();const response=await route.fetch();expect(response.status()).toBe(200);receipt=await response.json();firstPayload=route.request().postDataJSON();await route.abort('failed');
+  });
+  await page.getByRole('button',{name:'Gửi yêu cầu hỗ trợ',exact:true}).click();await expect(page.getByRole('status')).toContainText('Network Error');
+  const sent=page.waitForResponse(r=>r.url()===`${API}/api/support`&&r.request().method()==='POST');await page.getByRole('button',{name:'Gửi yêu cầu hỗ trợ',exact:true}).click();const result=await sent;expect(result.request().postDataJSON()).toEqual(firstPayload);
+  await expect(page.locator(`[data-support-id="${receipt.id}"]`)).toBeVisible();expect((await (await request.get(`${API}/api/support`,{headers:{Authorization:`Bearer ${customer.token}`}})).json()).total).toBe(1);
+  const auth=await request.post(`${API}/api/auth/login`,{data:{email:'admin@system.test',password:'CleanMate-admin-test-123!'}});const token=(await auth.json()).token;
+  expect((await request.put(`${API}/api/management/support/${receipt.id}`,{headers:{Authorization:`Bearer ${token}`},data:{status:'Resolved',response:'Đã liên hệ hai bên và xác nhận lại lịch.',version:1}})).status()).toBe(200);
+  await page.goto('/notifications');await page.locator('[data-notification-id]').filter({hasText:'Yêu cầu hỗ trợ đã được cập nhật'}).getByRole('link',{name:'Xem hỗ trợ',exact:true}).click();
+  await expect(page).toHaveURL(/\/support$/);await expect(page.locator(`[data-support-id="${receipt.id}"]`)).toContainText('Đã liên hệ hai bên');
+});
 const pageErrors = new WeakMap();
 test.beforeEach(async ({ page }) => {
   const errors = [];

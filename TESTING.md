@@ -1,9 +1,20 @@
 # Automated testing
 
-Verified on 16 October 2026: 23 frontend, 89 backend and 30 customer-web Playwright
-tests passed. The separate admin portal passed 8 Playwright cases and 1 server test.
+Verified on 16 October 2026: 25 frontend, 93 backend and 32 customer-web Playwright
+tests passed. The separate admin portal passed 10 Playwright cases and 1 server test;
+cleaner-web passed 16 Playwright cases and 8 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
+
+Booking support now covers both booking parties, staff resolution and notification
+navigation. A real-API scenario drops a committed report response, retries the same
+request ID and confirms that only one ticket exists. Staff actions never change
+cash records or booking status. Feature scope and remaining work: ../backend/PROJECT_STATUS.md.
+
+To export the customer Android bundle without changing historically tracked build
+files, use `expo export --platform android --output-dir .expo/validation-export`.
+Native bundle exports passed for both mobile projects; physical-device UI testing
+and signing/distribution remain separate checks.
 
 Use Node.js 22, .NET SDK 8 or 9 and a local SQL Server default instance. Both
 repositories must be checked out next to each other as web/ and backend/.
