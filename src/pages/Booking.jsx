@@ -4,13 +4,14 @@ import { createBooking } from "../api/bookings";
 import { useAuth } from "../context/AuthContext";
 import { phoneLink } from "../utils/contact";
 import { newRequestId } from "../utils/requestId";
+import { getServices } from "../api/services";
 
 /* =========================
    Data & Helpers
 ========================= */
 const API_URL = process.env.REACT_APP_API_URL;
 
-const SERVICES = {
+const SERVICE_PRESENTATION = {
   cleaning: {
     name: "Dọn Dẹp Tổng Quát",
     price: 70000,
@@ -141,7 +142,7 @@ function ServiceCard({ k, data, selected, onSelect }) {
   );
 }
 
-function StepService({ selected, setSelected, onNext }) {
+function StepService({ selected, setSelected, onNext, services }) {
   return (
     <>
       <div className="text-center mb-8">
@@ -154,7 +155,7 @@ function StepService({ selected, setSelected, onNext }) {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {Object.entries(SERVICES).map(([k, v]) => (
+        {Object.entries(services).map(([k, v]) => (
           <ServiceCard
             key={k}
             k={k}
@@ -340,7 +341,7 @@ function TimeAndDuration({
   totalPrice,
 }) {
   const MIN_HOURS = service?.minHours ?? 1; // vẫn lấy min theo service
-  const MAX_HOURS = 8;
+  const MAX_HOURS = service?.maxHours ?? 8;
 
   // ⬇️ giữ nguyên block minTime
   const minTime = useMemo(() => {
@@ -947,6 +948,19 @@ function Success({ code, onNew, onHome }) {
    MAIN: Booking (4 bước)
 ========================= */
 export default function Booking() {
+  const [services, setServices] = useState(null);
+  const [error, setError] = useState("");
+  const load = () => { setError(""); getServices().then(data => setServices(Object.fromEntries(data.map(s => [s.key, {
+    ...SERVICE_PRESENTATION[s.key], name: s.name, price: s.hourlyRate, minHours: s.minHours, maxHours: s.maxHours,
+  }])))).catch(() => setError("Không thể tải dịch vụ và giá. Vui lòng thử lại.")); };
+  React.useEffect(() => { load(); }, []);
+  if (error) return <main className="p-8"><p role="alert">{error}</p><button onClick={load}>Thử lại</button></main>;
+  if (!services) return <main className="p-8">Đang tải dịch vụ...</main>;
+  if (!Object.keys(services).length) return <main className="p-8">Hiện chưa có dịch vụ mở đặt lịch.</main>;
+  return <BookingFlow services={services} />;
+}
+
+function BookingFlow({ services: SERVICES }) {
   const { user } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -1071,6 +1085,7 @@ export default function Booking() {
         ContactPhone: customerInfo.phone,
         Notes: customerInfo.notes,
         PaymentMethod: "cash",
+        ExpectedPrice: total,
       };
       const signature = JSON.stringify(payload);
       if (bookingAttempt.current?.signature !== signature)
@@ -1126,6 +1141,7 @@ export default function Booking() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {currentStep === 1 && (
           <StepService
+            services={SERVICES}
             selected={selectedKey}
             setSelected={setSelectedKey}
             onNext={onServiceNext}

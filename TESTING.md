@@ -1,8 +1,29 @@
 # Automated testing
 
-Verified on 16 October 2026: 21 frontend, 82 backend and 28 Playwright tests passed.
+Verified on 16 October 2026: 29 frontend, 105 backend and 36 customer-web Playwright
+tests passed. The separate admin portal passed 14 Playwright cases and 1 server test;
+cleaner-web passed 20 Playwright cases and 8 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
+
+Profile → Đổi mật khẩu opens /security. Confirmation is checked before sending;
+wrong current passwords retain the session. Success clears credentials and returns
+to login. Protected API 401 responses also remove a revoked session. The new system
+scenario changes the password, verifies rejection of the old token and signs in
+again using the new password.
+The same page can revoke all CleanMate sessions without changing the password.
+Tests dismiss then accept confirmation, check old-token rejection, and sign in
+again with the unchanged password. This also works for Google-only accounts.
+
+Booking support now covers both booking parties, staff resolution and notification
+navigation. A real-API scenario drops a committed report response, retries the same
+request ID and confirms that only one ticket exists. Staff actions never change
+cash records or booking status. Feature scope and remaining work: ../backend/PROJECT_STATUS.md.
+
+To export the customer Android bundle without changing historically tracked build
+files, use `expo export --platform android --output-dir .expo/validation-export`.
+Native bundle exports passed for both mobile projects; physical-device UI testing
+and signing/distribution remain separate checks.
 
 Use Node.js 22, .NET SDK 8 or 9 and a local SQL Server default instance. Both
 repositories must be checked out next to each other as web/ and backend/.
@@ -30,6 +51,14 @@ dotnet test CleanMate.Tests/CleanMate.Tests.csproj --no-build --no-restore
 The Windows account running the tests needs permission to create and drop test
 databases. Tests use generated database names and never use application data.
 Both provider models and the generated PostgreSQL migration script are checked.
+
+The management portal is maintained separately in ../admin. Its README describes
+setup and tests. Run its system tests separately from this suite because both
+use the same temporary API/MVC host ports. Customer-web tests also verify
+application approval before cleaner access. Booking and service pages load
+current prices from the API and reject unavailable catalogs rather than quoting
+fallback prices. Configure REACT_APP_ADMIN_URL at build time when the management
+portal is hosted somewhere other than http://127.0.0.1:3001.
 
 ## Playwright system tests
 

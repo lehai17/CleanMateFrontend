@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { meApi } from "../api/auth";
+import {api} from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,15 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
   const [loading, setLoading] = useState(true);
+  useEffect(()=>{
+    const id=api.interceptors.response.use(response=>response,error=>{
+      if(error?.response?.status===401 && !error.config?.url?.endsWith('/auth/login')){
+        localStorage.removeItem('cm_user');localStorage.removeItem('cm_token');setUser(null);
+      }
+      return Promise.reject(error);
+    });
+    return()=>api.interceptors.response.eject(id);
+  },[]);
 
   useEffect(() => {
     const token = localStorage.getItem("cm_token");

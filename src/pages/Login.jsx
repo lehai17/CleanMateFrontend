@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { loginApi } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
+  // Logout can make PrivateRoute replace navigation state before this page mounts.
+  const [passwordChanged] = useState(()=>sessionStorage.getItem('cm_password_changed')==='1');
+  const [sessionsRevoked] = useState(()=>sessionStorage.getItem('cm_sessions_revoked')==='1');
+  useEffect(()=>{sessionStorage.removeItem('cm_password_changed');sessionStorage.removeItem('cm_sessions_revoked');},[]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -20,7 +24,7 @@ export default function Login() {
       const res = await loginApi(email, password);
       login(res.user, res.token);
       const from = location.state?.from?.pathname || "/";
-      const isAdmin = String(res.user?.role) === "Admin";
+      const isAdmin = ["Admin", "Staff"].includes(String(res.user?.role));
       const isCleaner =
         String(res.user?.role) === "Cleaner" || Boolean(res.user?.isCleaner);
       navigate(isAdmin ? "/admin" : isCleaner ? "/cleaner/jobs" : from, {
@@ -47,6 +51,8 @@ export default function Login() {
           <p className="mt-2 text-gray-600">Dịch vụ giúp việc theo giờ</p>
         </div>
 
+        {(passwordChanged || location.state?.passwordChanged) && <p role="status" className="mb-4 text-emerald-800">Đã đổi mật khẩu. Vui lòng đăng nhập lại.</p>}
+        {(sessionsRevoked || location.state?.sessionsRevoked) && <p role="status" className="mb-4 text-emerald-800">Đã đăng xuất tất cả thiết bị. Vui lòng đăng nhập lại.</p>}
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">Email</label>

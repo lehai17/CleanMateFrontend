@@ -10,6 +10,7 @@ export default function Header() {
     { label: "Đặt lịch", to: "/booking" },
     { label: "Đơn hàng", to: "/orders" },
     { label: "Hồ sơ", to: "/profile" },
+    { label: "Hỗ trợ", to: "/support" },
   ];
 
   return (

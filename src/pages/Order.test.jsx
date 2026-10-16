@@ -109,7 +109,8 @@ test("customer feedback confirms work without claiming cash was received", async
   try {
     await act(async () => root.render(<Order />));
     expect(container.textContent).toContain("CleanMate chỉ kết nối dịch vụ");
-    expect(container.querySelectorAll("a")).toHaveLength(0);
+    expect(container.querySelector('a[href="/support"]')).not.toBeNull();
+    expect(container.querySelectorAll('a[href*="/payment"]')).toHaveLength(0);
     await act(async () => button("Xác nhận và đánh giá").click());
     expect(button("Gửi đánh giá").disabled).toBe(true);
     const select = container.querySelector("select");

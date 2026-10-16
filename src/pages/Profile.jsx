@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getProfileApi,
   registerCleanerApi,
+  resubmitCleanerApi,
   updateCleanerProfileApi,
   updateProfileApi,
 } from "../api/auth";
@@ -93,13 +94,13 @@ export default function Profile() {
             city: cleanerForm.city,
             hourlyRate: Number(cleanerForm.hourlyRate),
           })
-        : await registerCleanerApi(payload);
+        : user?.cleanerProfile ? await resubmitCleanerApi(payload) : await registerCleanerApi(payload);
 
       applyProfile(updated);
       setMessage(
         user?.isCleaner
           ? "Da cap nhat ho so cleaner."
-          : "Dang ky cleaner thanh cong. Ban co the vao khu vuc nhan viec."
+          : "Đã gửi hồ sơ cleaner. Vui lòng chờ nhân viên xét duyệt trước khi nhận việc."
       );
     } catch (error) {
       setMessage(error?.response?.data?.message || "Xu ly cleaner that bai.");
@@ -117,6 +118,7 @@ export default function Profile() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Ho so tai khoan</h1>
+          <a href="/security" className="text-emerald-700 underline">Đổi mật khẩu</a>
           <p className="mt-2 text-gray-600">
             Luu so dien thoai, dia chi mac dinh va dang ky them vai tro cleaner.
           </p>
@@ -171,7 +173,7 @@ export default function Profile() {
                 <p className="mt-1 text-sm text-gray-600">
                   {user?.isCleaner
                     ? "Tai khoan nay da co khu vuc nhan viec rieng."
-                    : "Sau khi dang ky, tai khoan se duoc chuyen sang khu vuc cleaner de nhan don."}
+                    : "Hồ sơ cần được nhân viên duyệt trước khi bạn được nhận ca làm."}
                 </p>
               </div>
               {user?.isCleaner && (
@@ -180,7 +182,11 @@ export default function Profile() {
                 </span>
               )}
             </div>
-
+            {user?.cleanerProfile && !user?.isCleaner && <div className="mt-4 rounded border p-4">
+              <p>Trạng thái hồ sơ: {({ Pending: "Chờ duyệt", NeedsInfo: "Cần bổ sung", Rejected: "Từ chối" })[user.cleanerProfile.reviewStatus] || user.cleanerProfile.reviewStatus}</p>
+              {user.cleanerProfile.reviewReason && <p>Lý do: {user.cleanerProfile.reviewReason}</p>}
+              <button type="button" onClick={() => getProfileApi().then(applyProfile).catch(() => setMessage("Không thể tải lại hồ sơ."))} className="mt-2 underline">Tải lại trạng thái hồ sơ</button>
+            </div>}
             <form className="mt-6 space-y-4" onSubmit={handleCleanerSubmit}>
               <Field
                 label="Thanh pho lam viec"
@@ -192,14 +198,6 @@ export default function Profile() {
                 value={cleanerForm.addressText}
                 onChange={(value) =>
                   setCleanerForm((current) => ({ ...current, addressText: value }))
-                }
-              />
-              <Field
-                label="Muc gia / gio"
-                type="number"
-                value={String(cleanerForm.hourlyRate)}
-                onChange={(value) =>
-                  setCleanerForm((current) => ({ ...current, hourlyRate: value }))
                 }
               />
               <label className="block">
@@ -218,14 +216,14 @@ export default function Profile() {
 
               <button
                 type="submit"
-                disabled={cleanerSaving}
+                disabled={cleanerSaving || (!user?.isCleaner && user?.cleanerProfile?.reviewStatus === "Pending")}
                 className="rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
               >
                 {cleanerSaving
                   ? "Dang xu ly..."
                   : user?.isCleaner
                   ? "Cap nhat ho so cleaner"
-                  : "Dang ky lam cleaner"}
+                  : user?.cleanerProfile?.reviewStatus === "Pending" ? "Đang chờ xét duyệt" : user?.cleanerProfile ? "Gửi lại hồ sơ" : "Dang ky lam cleaner"}
               </button>
             </form>
           </section>

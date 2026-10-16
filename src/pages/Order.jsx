@@ -92,6 +92,7 @@ export default function Order() {
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Don hang da dat</h1>
+          <a href="/support" className="text-emerald-700 underline">Hỗ trợ đơn hàng</a>
           <button onClick={fetchOrders} disabled={loading || busyId !== null}
             className="rounded border px-3 py-2 disabled:opacity-50">Tải lại trạng thái</button>
         </div>

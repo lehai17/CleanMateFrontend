@@ -4,6 +4,34 @@ const { randomUUID } = require("node:crypto");
 const API = "http://127.0.0.1:15238";
 const PORTAL = "http://127.0.0.1:15080";
 const PASSWORD = "CleanMate-system-test-123!";
+test('customer confirms logout all and can sign in with the unchanged password',async({page,request})=>{
+  const customer=await account(request);await login(page,customer.email);await page.goto('/security');
+  page.once('dialog',dialog=>dialog.dismiss());await page.getByRole('button',{name:'Đăng xuất tất cả thiết bị',exact:true}).click();expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(200);
+  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Đăng xuất tất cả thiết bị',exact:true}).click();await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toContainText('Đã đăng xuất tất cả thiết bị');
+  expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(401);
+  await page.locator('form input[type="email"]').fill(customer.email);await page.locator('form input[type="password"]').fill(PASSWORD);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await expect(page).toHaveURL(/\/security$/);
+});
+test('customer changes password and logs in again while old tokens are rejected',async({page,request})=>{
+  const customer=await account(request),next='New-customer-password-456!';await login(page,customer.email);await page.goto('/security');await page.getByLabel('Mật khẩu hiện tại',{exact:true}).fill(PASSWORD);await page.getByLabel('Mật khẩu mới',{exact:true}).fill(next);await page.getByLabel('Nhập lại mật khẩu mới',{exact:true}).fill(next);await page.getByRole('button',{name:'Lưu mật khẩu mới',exact:true}).click();await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toContainText('Đã đổi mật khẩu');
+  expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(401);
+  await page.locator('form input[type="email"]').fill(customer.email);await page.locator('form input[type="password"]').fill(next);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await expect(page).toHaveURL(/\/security$/);await page.goto('/profile');await expect(page.getByRole('link',{name:'Đổi mật khẩu',exact:true})).toBeVisible();
+});
+
+test('customer retries a committed support report without duplication and reads staff resolution',async({page,request})=>{
+  const customer=await account(request),job=await apiBooking(request,customer);await login(page,customer.email);await page.goto('/support');
+  await page.getByLabel('Mã đơn',{exact:true}).fill(`CM${job.id}`);await page.getByLabel('Mô tả',{exact:true}).fill('Không liên hệ được cleaner trước ca làm.');
+  let firstPayload,receipt;
+  await page.route(`${API}/api/support`,async route=>{
+    if(receipt)return route.continue();const response=await route.fetch();expect(response.status()).toBe(200);receipt=await response.json();firstPayload=route.request().postDataJSON();await route.abort('failed');
+  });
+  await page.getByRole('button',{name:'Gửi yêu cầu hỗ trợ',exact:true}).click();await expect(page.getByRole('status')).toContainText('Network Error');
+  const sent=page.waitForResponse(r=>r.url()===`${API}/api/support`&&r.request().method()==='POST');await page.getByRole('button',{name:'Gửi yêu cầu hỗ trợ',exact:true}).click();const result=await sent;expect(result.request().postDataJSON()).toEqual(firstPayload);
+  await expect(page.locator(`[data-support-id="${receipt.id}"]`)).toBeVisible();expect((await (await request.get(`${API}/api/support`,{headers:{Authorization:`Bearer ${customer.token}`}})).json()).total).toBe(1);
+  const auth=await request.post(`${API}/api/auth/login`,{data:{email:'admin@system.test',password:'CleanMate-admin-test-123!'}});const token=(await auth.json()).token;
+  expect((await request.put(`${API}/api/management/support/${receipt.id}`,{headers:{Authorization:`Bearer ${token}`},data:{status:'Resolved',response:'Đã liên hệ hai bên và xác nhận lại lịch.',version:1}})).status()).toBe(200);
+  await page.goto('/notifications');await page.locator('[data-notification-id]').filter({hasText:'Yêu cầu hỗ trợ đã được cập nhật'}).getByRole('link',{name:'Xem hỗ trợ',exact:true}).click();
+  await expect(page).toHaveURL(/\/support$/);await expect(page.locator(`[data-support-id="${receipt.id}"]`)).toContainText('Đã liên hệ hai bên');
+});
 const pageErrors = new WeakMap();
 test.beforeEach(async ({ page }) => {
   const errors = [];
@@ -24,7 +52,18 @@ async function account(request, role = "Customer") {
       phoneNumber: "0901234567", address: "123 System Test Street", role },
   });
   expect(response.ok()).toBeTruthy();
-  return { ...(await response.json()), email: userEmail };
+  const result = await response.json();
+  if (role === "Cleaner") await approve(request, result.user.cleanerProfile.id);
+  return { ...result, email: userEmail };
+}
+
+async function approve(request, profileId) {
+  const auth = await request.post(`${API}/api/auth/login`, { data: { email: "admin@system.test", password: "CleanMate-admin-test-123!" } });
+  expect(auth.status()).toBe(200);
+  const token = (await auth.json()).token;
+  expect((await request.put(`${API}/api/management/applications/${profileId}/review`, {
+    headers: { Authorization: `Bearer ${token}` }, data: { status: "Approved" },
+  })).status()).toBe(200);
 }
 
 async function login(page, userEmail, role = "Customer") {
@@ -120,6 +159,26 @@ test("guest routes require login and online payment cannot be self-confirmed", a
   await expect(page.getByRole("button", { name: /Cleaner xác nhận đã nhận tiền mặt/ })).toHaveCount(0);
 });
 
+test("customer submits a cleaner application and gains job access only after staff approval", async ({ page, request }) => {
+  const customer = await account(request);
+  await login(page, customer.email);
+  await page.goto("/profile");
+  const submitted = page.waitForResponse(r => r.url() === `${API}/api/profile/register-cleaner` && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Dang ky lam cleaner", exact: true }).click();
+  const response = await submitted;
+  expect(response.status()).toBe(200);
+  const pending = await response.json();
+  expect(pending.isCleaner).toBe(false);
+  await expect(page.getByRole("button", { name: "Đang chờ xét duyệt", exact: true })).toBeDisabled();
+  await page.goto("/cleaner/jobs");
+  await expect(page).toHaveURL(/\/profile$/);
+  await approve(request, pending.cleanerProfile.id);
+  await page.getByRole("button", { name: "Tải lại trạng thái hồ sơ", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cap nhat ho so cleaner", exact: true })).toBeVisible();
+  await page.goto("/cleaner/jobs");
+  await expect(page).toHaveURL(/\/cleaner\/jobs$/);
+});
+
 test("customer and cleaner notifications retain read state and open the correct work area", async ({ page, request }) => {
   const customer = await account(request);
   const cleaner = await account(request, "Cleaner");
@@ -151,8 +210,8 @@ test("customer and cleaner notifications retain read state and open the correct 
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await login(page, cleaner.email, "Cleaner");
   await page.getByRole("link", { name: "Thông báo", exact: true }).click();
-  await expect(page.locator("article")).toHaveCount(2);
-  await expect(page.getByTestId("notification-unread-count")).toHaveText("2");
+  await expect(page.locator("article")).toHaveCount(3);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("3");
   const feedback = page.locator("article").filter({ hasText: "Khách đã đánh giá ca làm" });
   await expect(feedback.getByRole("link")).toHaveAttribute("href", "/cleaner/jobs");
   await feedback.getByRole("link").click();
@@ -464,9 +523,17 @@ test("cleaner portal registers and claims a booking through the real API", async
   const booking = await apiBooking(request, customer);
   await page.goto(`${PORTAL}/Auth/Register`);
   await page.locator('input[name="FullName"]').fill("Portal Browser Cleaner");
-  await page.locator('input[name="Email"]').fill(email());
+  const cleanerEmail = email();
+  await page.locator('input[name="Email"]').fill(cleanerEmail);
   await page.locator('input[name="Password"]').fill(PASSWORD);
   await page.locator('input[name="ConfirmPassword"]').fill(PASSWORD);
+  await page.locator('form button[type="submit"]').click();
+  await expect(page).toHaveURL(/:15080\/(?:Auth\/Login)?$/);
+  await expect(page.getByText(/Đã gửi hồ sơ/)).toBeVisible();
+  const application = await request.post(`${API}/api/auth/login`, { data: { email: cleanerEmail, password: PASSWORD } });
+  await approve(request, (await application.json()).user.cleanerProfile.id);
+  await page.locator('input[name="Email"]').fill(cleanerEmail);
+  await page.locator('input[name="Password"]').fill(PASSWORD);
   await page.locator('form button[type="submit"]').click();
   await expect(page).toHaveURL(/\/Dashboard(?:\/Index)?$/);
   await expect(page.getByText("Portal Browser Cleaner", { exact: true })).toBeVisible();

@@ -14,6 +14,8 @@ import AdminDashboard from "../pages/AdminDashboard";
 import Profile from "../pages/Profile";
 import CleanerJobs from "../pages/CleanerJobs";
 import Notifications from "../pages/Notifications";
+import Support from '../pages/Support';
+import Security from '../pages/Security';
 import { NotificationProvider } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,6 +25,8 @@ export default function AppRoutes({ shouldHideChrome }) {
     <NotificationProvider>
       {!shouldHideChrome && <Header />}
       <Routes>
+        <Route path="/security" element={<PrivateRoute><Security key={user?.id} /></PrivateRoute>} />
+        <Route path="/support" element={<PrivateRoute><Support key={user?.id} /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications key={user?.id} /></PrivateRoute>} />
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -39,7 +43,7 @@ export default function AppRoutes({ shouldHideChrome }) {
         <Route
           path="/admin"
           element={
-            <PrivateRoute allowed={["Admin"]}>
+            <PrivateRoute allowed={["Admin", "Staff"]}>
               <AdminDashboard />
             </PrivateRoute>
           }
