@@ -10,11 +10,19 @@ mobile system scenario injects 429, verifies the wait message and retries the re
 login successfully. Signup inputs cap new passwords at 72 characters; the backend
 enforces the stricter 72 UTF-8 byte bound. See ../backend/AUTH_RATE_LIMITS.md.
 
-Verified on 16 October 2026: 31 frontend, 120 backend and 40 customer-web Playwright
-tests passed. The separate admin portal passed 18 Playwright cases and 2 server tests;
+Verified on 16 October 2026: 36 frontend, 146 backend and 44 customer-web Playwright
+tests passed. The separate admin portal passed 26 Playwright cases and 5 Node tests;
 cleaner-web passed 24 Playwright cases and 9 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
+
+Completed/cancelled orders offer **Đặt lại**. Unit tests cover loading/retry guards,
+account boundaries, current service keys and mandatory new schedule selection.
+Desktop/mobile system cases change the original service's name, price and maximum
+hours, review the preserved contact/address/notes, confirm a new unpaid/unassigned
+cash order and verify that the source stays cancelled at its original price.
+A retired service returns to service selection and creates no order. See
+../backend/REBOOKING.md and ../mobile/REBOOKING.md for API/native scope.
 
 Profile → Đổi mật khẩu opens /security. Confirmation is checked before sending;
 wrong current passwords retain the session. Success clears credentials and returns

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { confirmOrderCompletion, deleteOrder, getOrders, rescheduleOrder } from "../api/bookings";
+import { confirmOrderCompletion, deleteOrder, getOrders, rescheduleOrder, getRebooking } from "../api/bookings";
+import { useNavigate } from "react-router-dom";
+import { newRequestId } from "../utils/requestId";
 import { paymentLabel } from "../utils/payment";
 import { phoneLink } from "../utils/contact";
 
 export default function Order() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -31,6 +34,18 @@ export default function Order() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  async function rebook(id) {
+    if (actionPending.current) return;
+    actionPending.current = true; setBusyId(id); setFeedbackError("");
+    try {
+      const template = await getRebooking(id);
+      navigate('/booking', { state: { rebook: template, rebookKey: newRequestId() } });
+    } catch (error) {
+      setFeedbackError(error?.response?.data?.message || "Không thể tải thông tin đặt lại. Vui lòng thử lại.");
+      if (error?.response?.status === 409) await fetchOrders();
+    } finally { actionPending.current = false; setBusyId(null); }
+  }
 
   async function handleDelete(id) {
     if (actionPending.current) return;
@@ -185,6 +200,9 @@ export default function Order() {
                       >
                         Hủy đơn
                       </button>
+                      {["Completed", "Cancelled"].includes(order.status) && <button
+                        disabled={busyId !== null} onClick={() => rebook(order.id)}
+                        className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Đặt lại</button>}
                       {order.status === "Pending" && !order.cleaner && new Date(order.date) > new Date() &&
                         (rescheduling?.id === order.id ? <form onSubmit={submitReschedule} className="mt-3 space-y-2">
                           <p>Chỉ đổi ngày/giờ khi chưa có cleaner nhận. Giá và thời lượng giữ nguyên.</p>
