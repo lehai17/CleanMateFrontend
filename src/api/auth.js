@@ -30,6 +30,10 @@ export async function registerCleanerApi(payload) {
   return data;
 }
 
+export async function resubmitCleanerApi(payload) {
+  return (await api.put("/api/profile/cleaner-application", payload)).data;
+}
+
 export async function updateCleanerProfileApi(payload) {
   const { data } = await api.put("/api/cleaner/profile", payload);
   return data;

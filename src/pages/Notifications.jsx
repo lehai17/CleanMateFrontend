@@ -53,7 +53,7 @@ export default function Notifications() {
         <p className="my-2">{item.message}</p>
         <p className="text-sm text-slate-600">{new Date(item.createdAt).toLocaleString("vi-VN")} · {item.readAt ? "Đã đọc" : "Chưa đọc"}</p>
         <div className="mt-3 flex flex-wrap gap-4">
-          <Link to={item.target === "CleanerJobs" ? "/cleaner/jobs" : "/orders"} className="text-emerald-800 underline">Xem đơn CM{item.bookingId}</Link>
+          <Link to={item.target === "Profile" ? "/profile" : item.target === "CleanerJobs" ? "/cleaner/jobs" : "/orders"} className="text-emerald-800 underline">{item.target === "Profile" ? "Xem hồ sơ" : `Xem đơn CM${item.bookingId}`}</Link>
           {!item.readAt && <button disabled={busy || loading} onClick={() => markRead(item)} className="text-emerald-800 underline">Đánh dấu đã đọc</button>}
         </div>
       </article>)}

@@ -12,8 +12,13 @@ module.exports = async () => {
     });
     for (let attempt = 0; attempt < 200; attempt++) {
       if (fs.existsSync(cleanupFile)) {
-        const cleanup = JSON.parse(fs.readFileSync(cleanupFile, "utf8"));
-        if (cleanup.cleaned === true && cleanup.database.startsWith("CleanMateSystemTests_")) return;
+        try {
+          const cleanup = JSON.parse(fs.readFileSync(cleanupFile, "utf8"));
+          if (cleanup.cleaned === true && cleanup.database.startsWith("CleanMateSystemTests_")) return;
+        } catch (error) {
+          // Retry if the host has opened its marker but has not finished writing.
+          if (!(error instanceof SyntaxError)) throw error;
+        }
       }
       await new Promise(resolve => setTimeout(resolve, 100));
     }

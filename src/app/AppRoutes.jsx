@@ -39,7 +39,7 @@ export default function AppRoutes({ shouldHideChrome }) {
         <Route
           path="/admin"
           element={
-            <PrivateRoute allowed={["Admin"]}>
+            <PrivateRoute allowed={["Admin", "Staff"]}>
               <AdminDashboard />
             </PrivateRoute>
           }

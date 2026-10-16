@@ -24,7 +24,18 @@ async function account(request, role = "Customer") {
       phoneNumber: "0901234567", address: "123 System Test Street", role },
   });
   expect(response.ok()).toBeTruthy();
-  return { ...(await response.json()), email: userEmail };
+  const result = await response.json();
+  if (role === "Cleaner") await approve(request, result.user.cleanerProfile.id);
+  return { ...result, email: userEmail };
+}
+
+async function approve(request, profileId) {
+  const auth = await request.post(`${API}/api/auth/login`, { data: { email: "admin@system.test", password: "CleanMate-admin-test-123!" } });
+  expect(auth.status()).toBe(200);
+  const token = (await auth.json()).token;
+  expect((await request.put(`${API}/api/management/applications/${profileId}/review`, {
+    headers: { Authorization: `Bearer ${token}` }, data: { status: "Approved" },
+  })).status()).toBe(200);
 }
 
 async function login(page, userEmail, role = "Customer") {
@@ -120,6 +131,26 @@ test("guest routes require login and online payment cannot be self-confirmed", a
   await expect(page.getByRole("button", { name: /Cleaner xác nhận đã nhận tiền mặt/ })).toHaveCount(0);
 });
 
+test("customer submits a cleaner application and gains job access only after staff approval", async ({ page, request }) => {
+  const customer = await account(request);
+  await login(page, customer.email);
+  await page.goto("/profile");
+  const submitted = page.waitForResponse(r => r.url() === `${API}/api/profile/register-cleaner` && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Dang ky lam cleaner", exact: true }).click();
+  const response = await submitted;
+  expect(response.status()).toBe(200);
+  const pending = await response.json();
+  expect(pending.isCleaner).toBe(false);
+  await expect(page.getByRole("button", { name: "Đang chờ xét duyệt", exact: true })).toBeDisabled();
+  await page.goto("/cleaner/jobs");
+  await expect(page).toHaveURL(/\/profile$/);
+  await approve(request, pending.cleanerProfile.id);
+  await page.getByRole("button", { name: "Tải lại trạng thái hồ sơ", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cap nhat ho so cleaner", exact: true })).toBeVisible();
+  await page.goto("/cleaner/jobs");
+  await expect(page).toHaveURL(/\/cleaner\/jobs$/);
+});
+
 test("customer and cleaner notifications retain read state and open the correct work area", async ({ page, request }) => {
   const customer = await account(request);
   const cleaner = await account(request, "Cleaner");
@@ -151,8 +182,8 @@ test("customer and cleaner notifications retain read state and open the correct 
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await login(page, cleaner.email, "Cleaner");
   await page.getByRole("link", { name: "Thông báo", exact: true }).click();
-  await expect(page.locator("article")).toHaveCount(2);
-  await expect(page.getByTestId("notification-unread-count")).toHaveText("2");
+  await expect(page.locator("article")).toHaveCount(3);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("3");
   const feedback = page.locator("article").filter({ hasText: "Khách đã đánh giá ca làm" });
   await expect(feedback.getByRole("link")).toHaveAttribute("href", "/cleaner/jobs");
   await feedback.getByRole("link").click();
@@ -464,9 +495,17 @@ test("cleaner portal registers and claims a booking through the real API", async
   const booking = await apiBooking(request, customer);
   await page.goto(`${PORTAL}/Auth/Register`);
   await page.locator('input[name="FullName"]').fill("Portal Browser Cleaner");
-  await page.locator('input[name="Email"]').fill(email());
+  const cleanerEmail = email();
+  await page.locator('input[name="Email"]').fill(cleanerEmail);
   await page.locator('input[name="Password"]').fill(PASSWORD);
   await page.locator('input[name="ConfirmPassword"]').fill(PASSWORD);
+  await page.locator('form button[type="submit"]').click();
+  await expect(page).toHaveURL(/:15080\/(?:Auth\/Login)?$/);
+  await expect(page.getByText(/Đã gửi hồ sơ/)).toBeVisible();
+  const application = await request.post(`${API}/api/auth/login`, { data: { email: cleanerEmail, password: PASSWORD } });
+  await approve(request, (await application.json()).user.cleanerProfile.id);
+  await page.locator('input[name="Email"]').fill(cleanerEmail);
+  await page.locator('input[name="Password"]').fill(PASSWORD);
   await page.locator('form button[type="submit"]').click();
   await expect(page).toHaveURL(/\/Dashboard(?:\/Index)?$/);
   await expect(page.getByText("Portal Browser Cleaner", { exact: true })).toBeVisible();

@@ -20,7 +20,7 @@ export default function Login() {
       const res = await loginApi(email, password);
       login(res.user, res.token);
       const from = location.state?.from?.pathname || "/";
-      const isAdmin = String(res.user?.role) === "Admin";
+      const isAdmin = ["Admin", "Staff"].includes(String(res.user?.role));
       const isCleaner =
         String(res.user?.role) === "Cleaner" || Boolean(res.user?.isCleaner);
       navigate(isAdmin ? "/admin" : isCleaner ? "/cleaner/jobs" : from, {

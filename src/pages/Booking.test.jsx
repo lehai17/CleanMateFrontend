@@ -2,6 +2,7 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import Booking from "./Booking";
 import { createBooking } from "../api/bookings";
+import { getServices } from "../api/services";
 
 const mockLocation = { state: null };
 const mockUser = { fullName: "Customer", phoneNumber: "0901234567", email: "customer@example.test", address: "123 Test Street" };
@@ -14,12 +15,19 @@ jest.mock("../context/AuthContext", () => ({
   useAuth: () => ({ user: mockUser }),
 }));
 jest.mock("../api/bookings", () => ({ createBooking: jest.fn() }));
+jest.mock("../api/services", () => ({ getServices: jest.fn() }));
 
 let container, root;
 // jsdom lacks the browser's Web Crypto implementation; use Node's real one.
 beforeAll(() => Object.defineProperty(window, "crypto", { value: require("crypto").webcrypto, configurable: true }));
 beforeEach(() => {
   jest.clearAllMocks();
+  getServices.mockResolvedValue([
+    { key: "cleaning", name: "Dọn Dẹp Tổng Quát", hourlyRate: 70000, minHours: 1, maxHours: 8 },
+    { key: "cooking", name: "Nấu Ăn & Rửa Bát", hourlyRate: 90000, minHours: 1, maxHours: 8 },
+    { key: "laundry", name: "Giặt Ủi Quần Áo", hourlyRate: 70000, minHours: 1, maxHours: 8 },
+    { key: "childcare", name: "Chăm Sóc Trẻ Em", hourlyRate: 100000, minHours: 1, maxHours: 8 },
+  ]);
   window.alert = jest.fn();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -70,6 +78,23 @@ test("customer cannot select online payment", async () => {
   await act(async () => root.render(<Booking />));
   expect(container.querySelector('input[value="online"]')).toBeNull();
   expect(container.querySelector('input[value="cash"]').checked).toBe(true);
+});
+
+test("booking uses current catalog pricing and sends the displayed quote for confirmation", async () => {
+  getServices.mockResolvedValueOnce([{ key: "cleaning", name: "Dọn Dẹp Tổng Quát", hourlyRate: 81000, minHours: 1, maxHours: 4 }]);
+  createBooking.mockResolvedValue({ id: 45, price: 162000, status: "Pending" });
+  await act(async () => root.render(<Booking />));
+  await confirm();
+  expect(createBooking.mock.calls[0][0].ExpectedPrice).toBe(162000);
+  expect(container.textContent).toContain("CM000045");
+});
+
+test("catalog loading failures prevent booking with a hardcoded fallback price", async () => {
+  getServices.mockRejectedValueOnce(new Error("offline"));
+  await act(async () => root.render(<Booking />));
+  expect(container.textContent).toContain("Không thể tải dịch vụ và giá");
+  expect([...container.querySelectorAll("button")].some(b => b.textContent.includes("Xác nhận đặt lịch"))).toBe(false);
+  expect(createBooking).not.toHaveBeenCalled();
 });
 
 test("rapid confirmation disables navigation and sends one booking while pending", async () => {

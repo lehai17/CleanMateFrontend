@@ -21,7 +21,7 @@ export default function PrivateRoute({
     return <Navigate to="/" replace />;
   }
 
-  if (requireCleaner && !user.isCleaner && user.role !== "Cleaner") {
+  if (requireCleaner && !user.isCleaner) {
     return <Navigate to="/profile" replace />;
   }
 
