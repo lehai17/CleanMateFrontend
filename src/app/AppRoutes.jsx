@@ -17,14 +17,19 @@ import Notifications from "../pages/Notifications";
 import Support from '../pages/Support';
 import Security from '../pages/Security';
 import Recovery from '../pages/Recovery';
+import NotFound from '../pages/NotFound';
+import { Ui, useUiPreferences } from '../ui/Preferences';
 import { NotificationProvider } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
 
 export default function AppRoutes({ shouldHideChrome }) {
   const { user } = useAuth();
+  const { language } = useUiPreferences();
   return (
     <NotificationProvider>
+      <Ui as="a" href="#main-content" className="sr-only focus:not-sr-only focus:block focus:bg-white focus:p-3 focus:text-emerald-800">{language === 'en' ? 'Skip to content' : 'Bỏ qua điều hướng'}</Ui>
       {!shouldHideChrome && <Header />}
+      <Ui as="div" id="main-content" tabIndex={-1} className="scroll-mt-20">
       <Routes>
         <Route path="/forgot-password" element={<Recovery />} />
         <Route path="/security" element={<PrivateRoute><Security key={user?.id} /></PrivateRoute>} />
@@ -76,7 +81,9 @@ export default function AppRoutes({ shouldHideChrome }) {
           }
         />
         <Route path="/payment-qr" element={<PaymentQR />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </Ui>
       {!shouldHideChrome && <Footer />}
     </NotificationProvider>
   );
