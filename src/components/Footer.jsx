@@ -26,10 +26,10 @@ export default function Footer() {
           <Ui as="div">
             <Ui as="h3" className="mb-4 font-semibold">Dịch vụ</Ui>
             <Ui as="ul" className="space-y-2 text-gray-400">
-              <Ui as="li"><Ui as="button" className="hover:text-white">Dọn dẹp nhà cửa</Ui></Ui>
-              <Ui as="li"><Ui as="button" className="hover:text-white">Nấu ăn và rửa bát</Ui></Ui>
-              <Ui as="li"><Ui as="button" className="hover:text-white">Giặt ủi</Ui></Ui>
-              <Ui as="li"><Ui as="button" className="hover:text-white">Chăm sóc trẻ em</Ui></Ui>
+              <Ui as="li"><Link to="/services" className="hover:text-white">Dọn dẹp nhà cửa</Link></Ui>
+              <Ui as="li"><Link to="/services" className="hover:text-white">Nấu ăn và rửa bát</Link></Ui>
+              <Ui as="li"><Link to="/services" className="hover:text-white">Giặt ủi</Link></Ui>
+              <Ui as="li"><Link to="/services" className="hover:text-white">Chăm sóc trẻ em</Link></Ui>
             </Ui>
           </Ui>
 
@@ -38,17 +38,15 @@ export default function Footer() {
             <Ui as="ul" className="space-y-2 text-gray-400">
               <Ui as="li"><Link to="/policies?tab=terms" className="hover:text-white">Điều khoản sử dụng</Link></Ui>
               <Ui as="li"><Link to="/policies?tab=privacy" className="hover:text-white">Chính sách bảo mật</Link></Ui>
-              <Ui as="li"><Link to="/policies?tab=refund" className="hover:text-white">Chính sách hoàn tiền</Link></Ui>
-              <Ui as="li"><Ui as="a" href="#contact" className="hover:text-white">Liên hệ</Ui></Ui>
+              <Ui as="li"><Link to="/policies?tab=refund" className="hover:text-white">Hỗ trợ sau dịch vụ</Link></Ui>
+              <Ui as="li"><Link to="/support" className="hover:text-white">Liên hệ</Link></Ui>
             </Ui>
           </Ui>
 
           <Ui as="div">
             <Ui as="h3" className="mb-4 font-semibold">Liên hệ</Ui>
             <Ui as="div" className="space-y-2 text-gray-400">
-              <Ui as="div">📞 1900 1234</Ui>
-              <Ui as="div">✉️ hello@cleanmate.vn</Ui>
-              <Ui as="div">📍 Mr. Nguyễn Xuân Hòa</Ui>
+              <Link to="/support" className="hover:text-white">Gửi yêu cầu hỗ trợ</Link>
             </Ui>
           </Ui>
         </Ui>

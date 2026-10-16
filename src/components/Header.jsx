@@ -32,7 +32,7 @@ export default function Header() {
       <Ui as="div" className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3">
           <Ui as="img" src="/images/logo.png" alt="CleanMate" className="h-12 w-auto" />
-          <Ui as="span" className="text-xl sm:text-3xl font-bold">
+          <Ui as="span" className={user ? "hidden text-3xl font-bold sm:inline" : "text-xl sm:text-3xl font-bold"}>
             <Ui as="span" className="text-emerald-600">Clean</Ui>
             <Ui as="span" className="text-amber-500">Mate</Ui>
           </Ui>
@@ -72,7 +72,7 @@ export default function Header() {
           {user ? (
             <>
               <NotificationLink />
-              <Ui as="span" className="hidden font-medium text-gray-700 sm:inline">
+              <Ui as="span" className="hidden max-w-40 truncate font-medium text-gray-700 sm:inline">
                 {<Raw>{user.fullName}</Raw>}
               </Ui>
               <Ui as="button"
