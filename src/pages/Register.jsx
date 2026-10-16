@@ -46,6 +46,7 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     if (!validateForm()) return;
     setIsLoading(true);
     try {
@@ -124,6 +125,7 @@ export default function Register() {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
+                maxLength={72}
                 required
                 value={formData.password}
                 onChange={handleInputChange}
@@ -147,6 +149,7 @@ export default function Register() {
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
+                maxLength={72}
                 required
                 value={formData.confirmPassword}
                 onChange={handleInputChange}

@@ -4,6 +4,13 @@ const { randomUUID } = require("node:crypto");
 const API = "http://127.0.0.1:15238";
 const PORTAL = "http://127.0.0.1:15080";
 const PASSWORD = "CleanMate-system-test-123!";
+test('login shows a readable retry message after throttling and permits retry',async({page,request})=>{
+  const customer=await account(request);await page.goto('/login');
+  await page.route(`${API}/api/auth/login`,route=>route.fulfill({status:429,contentType:'application/json',headers:{'Retry-After':'42'},body:JSON.stringify({message:'Thao tác quá nhiều lần. Thử lại sau 42 giây.',retryAfterSeconds:42})}));
+  await page.locator('form input[type="email"]').fill(customer.email);await page.locator('form input[type="password"]').fill(PASSWORD);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('42 giây');await expect(page.locator('form input[type="password"]')).toHaveValue('');await expect(page).toHaveURL(/\/login$/);
+  await page.unroute(`${API}/api/auth/login`);await login(page,customer.email);
+});
 test('customer confirms logout all and can sign in with the unchanged password',async({page,request})=>{
   const customer=await account(request);await login(page,customer.email);await page.goto('/security');
   page.once('dialog',dialog=>dialog.dismiss());await page.getByRole('button',{name:'Đăng xuất tất cả thiết bị',exact:true}).click();expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(200);

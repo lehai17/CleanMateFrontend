@@ -1,8 +1,13 @@
 # Automated testing
 
-Verified on 16 October 2026: 29 frontend, 105 backend and 36 customer-web Playwright
-tests passed. The separate admin portal passed 14 Playwright cases and 1 server test;
-cleaner-web passed 20 Playwright cases and 8 Node tests.
+Login now renders API errors inline and clears the attempted password. A desktop/
+mobile system scenario injects 429, verifies the wait message and retries the real
+login successfully. Signup inputs cap new passwords at 72 characters; the backend
+enforces the stricter 72 UTF-8 byte bound. See ../backend/AUTH_RATE_LIMITS.md.
+
+Verified on 16 October 2026: 29 frontend, 112 backend and 38 customer-web Playwright
+tests passed. The separate admin portal passed 16 Playwright cases and 2 server tests;
+cleaner-web passed 22 Playwright cases and 9 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
 
