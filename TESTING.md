@@ -1,6 +1,6 @@
 # Automated testing
 
-Verified on 15 October 2026: 14 frontend, 58 backend and 18 Playwright tests passed.
+Verified on 16 October 2026: 21 frontend, 82 backend and 28 Playwright tests passed.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
 
@@ -45,9 +45,15 @@ Playwright starts the real React production build, API and MVC cleaner portal on
 loopback ports 13000, 15238 and 15080. The production test build is written to
 .e2e-build/ without modifying .env or the normal deployment build.
 
-Nine scenarios run on desktop Chromium and a Pixel 7 browser viewport:
+Fourteen scenarios run on desktop Chromium and a Pixel 7 browser viewport:
 
 - Guest routes require login; the legacy QR page explains direct cash payment.
+- Customer/cleaner inboxes show their own notifications and correct work links;
+  single/all read actions and counts persist through reload and account changes.
+- Notification pagination appends older items; marking a viewed inbox read leaves
+  a newer arrival unread and refresh displays it.
+- A real API booking is committed, its response delivery is interrupted, and a
+  browser retry returns that same booking with exactly one order in the database.
 - Browser registration, booking, cleaner acceptance, start and completion;
   the customer's order shows the assigned cleaner's name and phone after refresh,
   with a telephone link. Unassigned orders show no contact or call link.
@@ -57,6 +63,10 @@ Nine scenarios run on desktop Chromium and a Pixel 7 browser viewport:
   Customer confirmation and rating do not mark cash received. The assigned
   cleaner separately declares receipt of cash. Both records survive reloads.
 - Cancellation retains pending-order history.
+- Customer rescheduling changes the same order's date/time, survives reload and
+  appears in the cleaner's available jobs without changing quote or duration.
+- A cleaner claiming while the customer edits causes a conflict; the customer
+  sees the actual Accepted state and the original time is preserved.
 - Cleaner permissions and order ownership are enforced.
 - Invalid bookings and client-supplied prices are rejected; provider checkout
   routes return 410 Gone and availability always reports direct cash only.
@@ -67,7 +77,9 @@ Nine scenarios run on desktop Chromium and a Pixel 7 browser viewport:
 - The MVC portal displays a concurrent-start conflict from the API, disables
   starting another job, and unlocks it after completion.
 
-No business API responses are mocked. There is no payment gateway or simulated
+No business API responses are mocked. The lost-response scenario uses route.fetch
+against the real API, then aborts delivery to the browser after the commit.
+There is no payment gateway or simulated
 provider. Test accounts are synthetic. Each run creates its own
 CleanMateSystemTests_<guid> database. Teardown waits for confirmation that this
 database was deleted. The integration suite uses CleanMateTests_<guid>.
@@ -111,6 +123,41 @@ Changes to the customer's profile do not alter the contact on new bookings.
 Legacy rows retain their previous profile fallback. Deploy the backend booking
 contact migration before serving the updated API. Tests migrate isolated local
 databases; they do not update application databases.
+
+Web/native booking confirmation disables confirmation and back navigation while
+sending, with an immediate guard against multiple clicks before React updates.
+An unchanged retry in the mounted form reuses its requestId. Editing the payload
+or choosing a new booking creates a fresh key. Keys are not persisted across
+page reloads/app restarts, so this does not deduplicate those separate sessions.
+Deploy the backend request-ID migration before serving the updated API.
+Native interaction and its request-ID generation require a real device check;
+Android export is a separate bundle check.
+
+Customers can reschedule future Pending orders before a cleaner accepts. The
+web uses local date/time input and native mobile uses date/time pickers, sending
+UTC plus the original date as a concurrency check. Quote and duration stay fixed.
+An API conflict closes the stale editor and reloads actual order state; other
+errors leave the form available to retry. Assigned, cancelled and expired orders
+have no rescheduling action. Native picker interaction still needs a device check.
+
+## Notification inbox
+
+Authenticated users have a /notifications inbox and a header bell/unread badge,
+including small screens. Native customer and cleaner tabs have an inbox and
+badge; the cleaner's placeholder messages tab is replaced by real notifications.
+Inbox actions are explicit (opening an order does not silently mark it read),
+support retry on load/read failures, and page older records without losing the
+newest read-all boundary. Notification content contains booking updates rather
+than private contact details.
+
+Badges refresh on web route/focus changes and every 30 seconds while the page is
+visible; native polling runs only while foregrounded and refreshes on inbox focus.
+Refresh reloads the current inbox. Requests from a previous signed-in user cannot
+replace the new user's badge, and the web inbox remounts for an account change.
+Read state is stored on the server and shared across devices. Install the backend
+notification migration before deployment; tests migrate generated databases only.
+These are in-app notifications, not device/browser push. Native interaction and
+background delivery are not covered by the mobile Chromium project or export.
 
 Earlier online-payment API routes are retired even if old enabled configuration
 values remain. Old provider schema/history is retained, not relabelled as cash.

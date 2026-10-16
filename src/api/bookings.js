@@ -14,6 +14,10 @@ export async function deleteOrder(id) {
   await api.put(`/api/orders/${id}/cancel`);
 }
 
+export async function rescheduleOrder(id, schedule) {
+  return (await api.put(`/api/orders/${id}/reschedule`, schedule)).data;
+}
+
 export async function getAvailableCleanerJobs() {
   const { data } = await api.get("/api/cleaner/jobs/available");
   return data;
