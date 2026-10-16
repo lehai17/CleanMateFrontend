@@ -111,13 +111,70 @@ async function uiBooking(page, contactName, loseFirstResponse = false) {
 }
 
 test("guest routes require login and online payment cannot be self-confirmed", async ({ page }) => {
-  for (const path of ["/booking", "/orders", "/profile", "/cleaner/jobs"]) {
+  for (const path of ["/booking", "/orders", "/profile", "/cleaner/jobs", "/notifications"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login$/);
   }
   await page.goto("/payment-qr");
   await expect(page.getByRole("heading", { name: "Thanh toán tiền mặt trực tiếp" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Cleaner xác nhận đã nhận tiền mặt/ })).toHaveCount(0);
+});
+
+test("customer and cleaner notifications retain read state and open the correct work area", async ({ page, request }) => {
+  const customer = await account(request);
+  const cleaner = await account(request, "Cleaner");
+  const booking = await apiBooking(request, customer);
+  const headers = { Authorization: `Bearer ${cleaner.token}` };
+  for (const action of ["accept", "start", "complete", "cash-payment"])
+    expect((await request.put(`${API}/api/cleaner/jobs/${booking.id}/${action}`, { headers })).status()).toBe(200);
+  expect((await request.put(`${API}/api/orders/${booking.id}/confirm-completion`, {
+    headers: { Authorization: `Bearer ${customer.token}` }, data: { rating: 5, review: "Good work" },
+  })).status()).toBe(200);
+  await login(page, customer.email);
+  await page.getByRole("link", { name: "Thông báo", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Thông báo", exact: true })).toBeVisible();
+  await expect(page.locator("article")).toHaveCount(5);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("5");
+  const receipt = page.locator("article").filter({ hasText: "Cleaner xác nhận đã nhận tiền mặt" });
+  await expect(receipt.getByRole("link")).toHaveAttribute("href", "/orders");
+  await receipt.getByRole("button", { name: "Đánh dấu đã đọc", exact: true }).click();
+  await expect(receipt.getByRole("button")).toHaveCount(0);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("4");
+  await page.reload();
+  await expect(receipt.getByRole("button")).toHaveCount(0);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("4");
+  await page.getByRole("button", { name: "Đánh dấu tất cả đã đọc", exact: true }).click();
+  await expect(page.getByText("Chưa đọc: 0", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("notification-unread-count")).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText("Chưa đọc: 0", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
+  await login(page, cleaner.email, "Cleaner");
+  await page.getByRole("link", { name: "Thông báo", exact: true }).click();
+  await expect(page.locator("article")).toHaveCount(2);
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("2");
+  const feedback = page.locator("article").filter({ hasText: "Khách đã đánh giá ca làm" });
+  await expect(feedback.getByRole("link")).toHaveAttribute("href", "/cleaner/jobs");
+  await feedback.getByRole("link").click();
+  await expect(page).toHaveURL(/\/cleaner\/jobs$/);
+  await expect(page.locator(`article[data-booking-id="${booking.id}"]`)).toContainText("Completed");
+});
+
+test("notification pagination and read-all preserve an arrival newer than the viewed inbox", async ({ page, request }) => {
+  const customer = await account(request);
+  for (let index = 0; index < 21; index++) await apiBooking(request, customer);
+  await login(page, customer.email);
+  await page.getByRole("link", { name: "Thông báo", exact: true }).click();
+  await expect(page.locator("article")).toHaveCount(20);
+  await page.getByRole("button", { name: "Xem thêm", exact: true }).click();
+  await expect(page.locator("article")).toHaveCount(21);
+  const newest = await apiBooking(request, customer);
+  await page.getByRole("button", { name: "Đánh dấu tất cả đã đọc", exact: true }).click();
+  await expect(page.getByText("Chưa đọc: 1", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Tải lại thông báo", exact: true }).click();
+  await expect(page.locator("article").first()).toContainText(`CM${newest.id}`);
+  await expect(page.locator("article").first().getByRole("button", { name: "Đánh dấu đã đọc", exact: true })).toBeVisible();
+  await expect(page.getByTestId("notification-unread-count")).toHaveText("1");
 });
 
 test("retry after losing a committed booking response creates only one order", async ({ page, request }) => {

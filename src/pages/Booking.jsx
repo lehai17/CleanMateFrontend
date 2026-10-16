@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createBooking } from "../api/bookings";
-import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { phoneLink } from "../utils/contact";
 import { newRequestId } from "../utils/requestId";
