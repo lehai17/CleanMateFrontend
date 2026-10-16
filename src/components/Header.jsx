@@ -2,19 +2,20 @@ import { Ui, Raw } from './../ui/Preferences';
 import { Link } from './../ui/Links';
 import { useAuth } from "../context/AuthContext";
 import NotificationLink from "./NotificationLink";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useUiPreferences } from "../ui/Preferences";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef(null);
   const { pathname } = useLocation();
   const { language } = useUiPreferences();
   useEffect(() => { setMenuOpen(false); }, [pathname, user]);
   useEffect(() => {
     if (!menuOpen) return;
-    const close = event => { if (event.key === "Escape") setMenuOpen(false); };
+    const close = event => { if (event.key === "Escape") { setMenuOpen(false); menuButton.current?.focus(); } };
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, [menuOpen]);
@@ -60,6 +61,7 @@ export default function Header() {
 
         <Ui as="div" className="flex items-center gap-3">
           <Ui as="button"
+            ref={menuButton}
             type="button"
             className="rounded-lg border border-gray-300 px-2 py-1 text-gray-700 xl:hidden"
             aria-label={language === "en" ? "Navigation menu" : "Menu điều hướng"}
