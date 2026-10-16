@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { confirmOrderCompletion, deleteOrder, getOrders } from "../api/bookings";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { confirmOrderCompletion, deleteOrder, getOrders, rescheduleOrder } from "../api/bookings";
 import { paymentLabel } from "../utils/payment";
 import { phoneLink } from "../utils/contact";
 
@@ -12,6 +12,10 @@ export default function Order() {
   const [review, setReview] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [feedbackError, setFeedbackError] = useState("");
+  const [rescheduling, setRescheduling] = useState(null);
+  const [newTime, setNewTime] = useState("");
+  const [message, setMessage] = useState("");
+  const actionPending = useRef(false);
 
   const fetchOrders = useCallback(async () => {
       try {
@@ -29,21 +33,49 @@ export default function Order() {
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   async function handleDelete(id) {
+    if (actionPending.current) return;
     if (!window.confirm("Bạn có chắc muốn hủy đơn này?")) {
       return;
     }
 
+    actionPending.current = true;
+    setBusyId(id);
     try {
       await deleteOrder(id);
       setOrders((current) => current.map((item) => item.id === id ? { ...item, status: "Cancelled" } : item));
     } catch (error) {
       alert(error?.response?.data?.message || "Không thể hủy đơn.");
+    } finally { actionPending.current = false; setBusyId(null); }
+  }
+
+  async function submitReschedule(event) {
+    event.preventDefault();
+    if (actionPending.current || !rescheduling) return;
+    const start = new Date(newTime);
+    if (!newTime || Number.isNaN(start.getTime()) || start <= new Date()) {
+      setFeedbackError("Vui lòng chọn ngày giờ trong tương lai.");
+      return;
     }
+    actionPending.current = true;
+    setBusyId(rescheduling.id);
+    setFeedbackError(""); setMessage("");
+    try {
+      const result = await rescheduleOrder(rescheduling.id, {
+        startTime: start.toISOString(), expectedStartTime: rescheduling.date,
+      });
+      setOrders(current => current.map(order => order.id === rescheduling.id ? { ...order, ...result } : order));
+      setRescheduling(null);
+      setMessage("Đã đổi lịch thành công. Giá và thời lượng giữ nguyên.");
+    } catch (error) {
+      setFeedbackError(error?.response?.data?.message || "Không thể đổi lịch. Vui lòng thử lại.");
+      if (error?.response?.status === 409) { setRescheduling(null); await fetchOrders(); }
+    } finally { actionPending.current = false; setBusyId(null); }
   }
 
   async function submitFeedback(event, id) {
     event.preventDefault();
-    if (busyId !== null) return;
+    if (actionPending.current) return;
+    actionPending.current = true;
     setBusyId(id);
     setFeedbackError("");
     try {
@@ -52,7 +84,7 @@ export default function Order() {
       setEditingId(null);
     } catch (error) {
       setFeedbackError(error?.response?.data?.message || "Không thể gửi đánh giá. Vui lòng thử lại.");
-    } finally { setBusyId(null); }
+    } finally { actionPending.current = false; setBusyId(null); }
   }
 
   return (
@@ -68,6 +100,7 @@ export default function Order() {
           Khách trả tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca. CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.
         </p>
         {feedbackError && <p role="alert" className="mb-4 text-red-700">{feedbackError}</p>}
+        {message && <p role="status" className="mb-4 text-emerald-800">{message}</p>}
 
         {loading && (
           <div className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
@@ -151,6 +184,19 @@ export default function Order() {
                       >
                         Hủy đơn
                       </button>
+                      {order.status === "Pending" && !order.cleaner && new Date(order.date) > new Date() &&
+                        (rescheduling?.id === order.id ? <form onSubmit={submitReschedule} className="mt-3 space-y-2">
+                          <p>Chỉ đổi ngày/giờ khi chưa có cleaner nhận. Giá và thời lượng giữ nguyên.</p>
+                          <label htmlFor={`schedule-${order.id}`} className="block">Ngày giờ mới</label>
+                          <input id={`schedule-${order.id}`} type="datetime-local" required value={newTime}
+                            min={localInputTime(new Date(Date.now() + 60000))} disabled={busyId !== null}
+                            onChange={event => setNewTime(event.target.value)} className="block rounded border p-2" />
+                          <button type="submit" disabled={busyId !== null || !newTime} className="rounded bg-emerald-700 px-3 py-2 text-white">Lưu lịch mới</button>
+                          <button type="button" disabled={busyId !== null} onClick={() => setRescheduling(null)} className="ml-2 rounded border px-3 py-2">Đóng</button>
+                        </form> : <button disabled={busyId !== null} onClick={() => {
+                          setRescheduling(order); setNewTime(localInputTime(order.date));
+                          setFeedbackError(""); setMessage(""); setEditingId(null);
+                        }} className="mt-2 block rounded border px-3 py-2">Đổi lịch</button>)}
                       {order.status === "Completed" && !order.customerConfirmedAt && (editingId === order.id ? (
                         <form onSubmit={event => submitFeedback(event, order.id)} className="mt-3 space-y-2">
                           <p>Xác nhận công việc đã hoàn thành. Đánh giá này không xác nhận đã trả tiền.</p>
@@ -168,6 +214,7 @@ export default function Order() {
                         </form>
                       ) : <button disabled={busyId !== null} onClick={() => {
                         setEditingId(order.id); setRating(""); setReview(""); setFeedbackError("");
+                        setRescheduling(null);
                       }} className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Xác nhận và đánh giá</button>)}
                     </td>
                   </tr>
@@ -215,4 +262,10 @@ function formatDate(value) {
   }
 
   return date.toLocaleString("vi-VN");
+}
+
+function localInputTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }

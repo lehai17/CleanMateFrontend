@@ -16,6 +16,8 @@ jest.mock("../context/AuthContext", () => ({
 jest.mock("../api/bookings", () => ({ createBooking: jest.fn() }));
 
 let container, root;
+// jsdom lacks the browser's Web Crypto implementation; use Node's real one.
+beforeAll(() => Object.defineProperty(window, "crypto", { value: require("crypto").webcrypto, configurable: true }));
 beforeEach(() => {
   jest.clearAllMocks();
   window.alert = jest.fn();
@@ -68,4 +70,32 @@ test("customer cannot select online payment", async () => {
   await act(async () => root.render(<Booking />));
   expect(container.querySelector('input[value="online"]')).toBeNull();
   expect(container.querySelector('input[value="cash"]').checked).toBe(true);
+});
+
+test("rapid confirmation disables navigation and sends one booking while pending", async () => {
+  let resolve;
+  createBooking.mockImplementation(() => new Promise(done => { resolve = done; }));
+  await act(async () => root.render(<Booking />));
+  const button = [...container.querySelectorAll("button")].find(b => b.textContent.includes("Xác nhận đặt lịch"));
+  await act(async () => { button.click(); button.click(); });
+  expect(createBooking).toHaveBeenCalledTimes(1);
+  expect(button.disabled).toBe(true);
+  expect(container.textContent).toContain("Đang đặt lịch...");
+  expect([...container.querySelectorAll("button")].find(b => b.textContent === "Quay lại").disabled).toBe(true);
+  await act(async () => resolve({ id: 43 }));
+  expect(container.textContent).toContain("CM000043");
+});
+
+test("retry after a lost response keeps the same request key", async () => {
+  createBooking.mockRejectedValueOnce(new Error("Network error")).mockResolvedValueOnce({ id: 44 });
+  const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    await act(async () => root.render(<Booking />));
+    await confirm();
+    await confirm();
+    expect(createBooking).toHaveBeenCalledTimes(2);
+    expect(createBooking.mock.calls[0][0].RequestId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(createBooking.mock.calls[1][0]).toEqual(createBooking.mock.calls[0][0]);
+    expect(container.textContent).toContain("CM000044");
+  } finally { errorLog.mockRestore(); }
 });

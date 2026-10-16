@@ -1,9 +1,9 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import Order from "./Order";
-import { getOrders, deleteOrder, confirmOrderCompletion } from "../api/bookings";
+import { getOrders, deleteOrder, confirmOrderCompletion, rescheduleOrder } from "../api/bookings";
 
-jest.mock("../api/bookings", () => ({ getOrders: jest.fn(), deleteOrder: jest.fn(), confirmOrderCompletion: jest.fn() }));
+jest.mock("../api/bookings", () => ({ getOrders: jest.fn(), deleteOrder: jest.fn(), confirmOrderCompletion: jest.fn(), rescheduleOrder: jest.fn() }));
 beforeEach(() => jest.clearAllMocks());
 
 test("refresh shows the assigned cleaner contact and avoids unusable call links", async () => {
@@ -43,7 +43,7 @@ test("cancellation preserves the visible order and disables further cancellation
   const container = document.createElement("div");
   const root = createRoot(container);
   await act(async () => root.render(<Order />));
-  const buttons = container.querySelectorAll("tbody button");
+  const buttons = [...container.querySelectorAll("tbody button")].filter(button => button.textContent === "Hủy đơn");
   expect(buttons[0].disabled).toBe(false);
   expect(buttons[1].disabled).toBe(true);
   await act(async () => buttons[0].click());
@@ -52,6 +52,52 @@ test("cancellation preserves the visible order and disables further cancellation
   expect(container.querySelector("tbody tr").textContent).toContain("Cancelled");
   expect(container.querySelector("tbody button").disabled).toBe(true);
   await act(async () => root.unmount());
+});
+
+test("rescheduling sends UTC and the original schedule while retaining order details", async () => {
+  const original = new Date(Date.now() + 2 * 86400000).toISOString();
+  const target = new Date(Date.now() + 3 * 86400000);
+  const local = new Date(target.getTime() - target.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  getOrders.mockResolvedValue([{ id: 9, date: original, status: "Pending", price: 140000, contactName: "Booking Contact" }]);
+  rescheduleOrder.mockResolvedValue({ id: 9, date: new Date(local).toISOString(), price: 140000, status: "Pending" });
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(<Order />));
+    await act(async () => [...container.querySelectorAll("button")].find(b => b.textContent === "Đổi lịch").click());
+    const input = container.querySelector('input[type="datetime-local"]');
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, local);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => container.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(rescheduleOrder).toHaveBeenCalledWith(9, { startTime: new Date(local).toISOString(), expectedStartTime: original });
+    expect(container.textContent).toContain("Đã đổi lịch thành công");
+    expect(container.textContent).toContain("Booking Contact");
+    expect(container.textContent).toContain(Number(140000).toLocaleString("vi-VN"));
+    expect(container.querySelector("form")).toBeNull();
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+test("a stale reschedule refreshes the assigned order and closes the editor without inventing success", async () => {
+  const original = new Date(Date.now() + 2 * 86400000).toISOString();
+  getOrders.mockResolvedValueOnce([{ id: 10, date: original, status: "Pending" }])
+    .mockResolvedValueOnce([{ id: 10, date: original, status: "Accepted", cleaner: { name: "Cleaner" } }]);
+  rescheduleOrder.mockRejectedValue({ response: { status: 409, data: { message: "Cleaner đã nhận đơn." } } });
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(<Order />));
+    await act(async () => [...container.querySelectorAll("button")].find(b => b.textContent === "Đổi lịch").click());
+    await act(async () => container.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(container.textContent).toContain("Cleaner đã nhận đơn.");
+    expect(container.textContent).toContain("Accepted");
+    expect(container.textContent).not.toContain("Đã đổi lịch thành công");
+    expect(container.querySelector("form")).toBeNull();
+    expect([...container.querySelectorAll("button")].some(b => b.textContent === "Đổi lịch")).toBe(false);
+  } finally { await act(async () => root.unmount()); }
 });
 
 test("customer feedback confirms work without claiming cash was received", async () => {

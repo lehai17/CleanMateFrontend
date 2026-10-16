@@ -45,7 +45,7 @@ async function apiBooking(request, customer, schedule = {}) {
   return response.json();
 }
 
-async function uiBooking(page, contactName) {
+async function uiBooking(page, contactName, loseFirstResponse = false) {
   await page.goto("/booking");
   await page.getByRole("button", { name: /Dọn Dẹp Tổng Quát/ }).click();
   await page.getByRole("button", { name: "Tiếp tục", exact: true }).click();
@@ -70,6 +70,23 @@ async function uiBooking(page, contactName) {
   await expect(page.locator('input[value="online"]')).toHaveCount(0);
   await expect(page.locator('input[value="cash"]')).toBeChecked();
   await page.getByRole("button", { name: "Tiếp tục", exact: true }).click();
+  let firstReceipt;
+  let firstPayload;
+  if (loseFirstResponse) {
+    await page.route(`${API}/api/bookings`, async route => {
+      if (firstReceipt) return route.continue();
+      const response = await route.fetch();
+      expect(response.status()).toBe(200);
+      firstReceipt = await response.json();
+      firstPayload = route.request().postDataJSON();
+      // Real API commits the booking; only delivery to this browser is interrupted.
+      await route.abort("failed");
+    });
+    const failed = page.waitForEvent("dialog");
+    await page.getByRole("button", { name: "Xác nhận đặt lịch", exact: true }).click();
+    await (await failed).accept();
+    await expect(page.getByRole("button", { name: "Xác nhận đặt lịch", exact: true })).toBeEnabled();
+  }
   const saved = page.waitForResponse(r => r.url() === `${API}/api/bookings` && r.request().method() === "POST");
   await page.getByRole("button", { name: "Xác nhận đặt lịch", exact: true }).click();
   const response = await saved;
@@ -80,6 +97,12 @@ async function uiBooking(page, contactName) {
   expect(payload.ServiceKey).toBe("cleaning");
   expect(payload.ContactPhone).toBe("0907654321");
   expect(payload.ContactName).toBe(contactName);
+  expect(payload.RequestId).toMatch(/^[0-9a-f-]{36}$/);
+  if (loseFirstResponse) {
+    expect(booking.id).toBe(firstReceipt.id);
+    expect(payload).toEqual(firstPayload);
+    await page.unroute(`${API}/api/bookings`);
+  }
   expect(payload).not.toHaveProperty("Price");
   expect(payload).not.toHaveProperty("CleanerId");
   await expect(page.getByRole("heading", { name: "Đặt lịch thành công!" })).toBeVisible();
@@ -95,6 +118,19 @@ test("guest routes require login and online payment cannot be self-confirmed", a
   await page.goto("/payment-qr");
   await expect(page.getByRole("heading", { name: "Thanh toán tiền mặt trực tiếp" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Cleaner xác nhận đã nhận tiền mặt/ })).toHaveCount(0);
+});
+
+test("retry after losing a committed booking response creates only one order", async ({ page, request }) => {
+  const customer = await account(request);
+  await login(page, customer.email);
+  const booking = await uiBooking(page, "Retry Contact", true);
+  const orders = await request.get(`${API}/api/orders`, { headers: { Authorization: `Bearer ${customer.token}` } });
+  expect(orders.status()).toBe(200);
+  const list = await orders.json();
+  expect(list).toHaveLength(1);
+  expect(list[0].id).toBe(booking.id);
+  await page.goto("/orders");
+  await expect(page.getByRole("row").filter({ hasText: `CM${booking.id}` })).toContainText("Pending");
 });
 
 test("cleaner rejects stale overlapping claims and completes the active job before starting the next", async ({ page, request }) => {
@@ -275,6 +311,61 @@ test("cancelling a pending order keeps its history after reload", async ({ page,
   await expect(row.getByRole("button", { name: "Hủy đơn" })).toBeDisabled();
   await page.reload();
   await expect(row).toContainText("Cancelled");
+});
+
+test("customer reschedules an unassigned order and cleaner sees the new time after reload", async ({ page, request }) => {
+  const customer = await account(request);
+  const cleaner = await account(request, "Cleaner");
+  const booking = await apiBooking(request, customer);
+  await login(page, customer.email);
+  await page.goto("/orders");
+  const row = page.getByRole("row").filter({ hasText: `CM${booking.id}` });
+  await row.getByRole("button", { name: "Đổi lịch", exact: true }).click();
+  const targetDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date(Date.now() + 4 * 86400000));
+  const local = `${targetDay}T14:30`;
+  await row.getByLabel("Ngày giờ mới", { exact: true }).fill(local);
+  const saved = page.waitForResponse(r => r.url() === `${API}/api/orders/${booking.id}/reschedule` && r.request().method() === "PUT");
+  await row.getByRole("button", { name: "Lưu lịch mới", exact: true }).click();
+  const response = await saved;
+  expect(response.status()).toBe(200);
+  const target = new Date(`${local}:00+07:00`).toISOString();
+  expect(new Date((await response.json()).date).toISOString()).toBe(target);
+  expect(response.request().postDataJSON().expectedStartTime).toBe(booking.startTime);
+  await expect(page.getByRole("status")).toContainText("Đã đổi lịch thành công");
+  await expect(row.getByRole("cell").nth(1)).toContainText("14:30");
+  await page.reload();
+  await expect(row.getByRole("cell").nth(1)).toContainText("14:30");
+  const orders = await (await request.get(`${API}/api/orders`, { headers: { Authorization: `Bearer ${customer.token}` } })).json();
+  expect(orders).toHaveLength(1);
+  expect(orders[0]).toMatchObject({ id: booking.id, status: "Pending", price: 140000 });
+  const jobs = await (await request.get(`${API}/api/cleaner/jobs/available`, { headers: { Authorization: `Bearer ${cleaner.token}` } })).json();
+  const job = jobs.find(item => item.id === booking.id);
+  expect(new Date(job.startTime).toISOString()).toBe(target);
+  expect(job.durationHours).toBe(2);
+});
+
+test("a cleaner claiming while the customer edits prevents rescheduling and refreshes the order", async ({ page, request }) => {
+  const customer = await account(request);
+  const cleaner = await account(request, "Cleaner");
+  const booking = await apiBooking(request, customer);
+  await login(page, customer.email);
+  await page.goto("/orders");
+  const row = page.getByRole("row").filter({ hasText: `CM${booking.id}` });
+  await row.getByRole("button", { name: "Đổi lịch", exact: true }).click();
+  await row.getByLabel("Ngày giờ mới", { exact: true }).fill(`${futureDay()}T16:30`);
+  expect((await request.put(`${API}/api/cleaner/jobs/${booking.id}/accept`, {
+    headers: { Authorization: `Bearer ${cleaner.token}` },
+  })).status()).toBe(200);
+  await row.getByRole("button", { name: "Lưu lịch mới", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Đơn đã thay đổi");
+  await expect(row).toContainText("Accepted");
+  await expect(row.getByRole("button", { name: "Đổi lịch", exact: true })).toHaveCount(0);
+  await expect(row.getByLabel("Ngày giờ mới", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(0);
+  const order = (await (await request.get(`${API}/api/orders`, { headers: { Authorization: `Bearer ${customer.token}` } })).json())[0];
+  expect(order.date).toBe(booking.startTime);
+  await page.reload();
+  await expect(row).toContainText("Accepted");
 });
 
 test("customer cannot claim jobs or cancel another customer's order", async ({ page, request }) => {

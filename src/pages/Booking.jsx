@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createBooking } from "../api/bookings";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { phoneLink } from "../utils/contact";
+import { newRequestId } from "../utils/requestId";
 
 /* =========================
    Data & Helpers
@@ -737,6 +738,7 @@ function StepConfirm({
   pricing,
   onBack,
   onConfirm,
+  submitting,
 }) {
   if (!service || !customer) return null;
   return (
@@ -877,17 +879,19 @@ function StepConfirm({
           <div className="mt-8 flex justify-between">
             <button
               onClick={onBack}
+              disabled={submitting}
               className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
             >
               Quay lại
             </button>
             <button
               onClick={onConfirm}
+              disabled={submitting}
               className="px-8 py-3 rounded-lg font-semibold text-white shadow
                          bg-gradient-to-r from-emerald-600 to-amber-500 hover:opacity-95
                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600"
             >
-              Xác nhận đặt lịch
+              {submitting ? "Đang đặt lịch..." : "Xác nhận đặt lịch"}
             </button>
           </div>
         </div>
@@ -979,6 +983,9 @@ export default function Booking() {
   }, [location.state]);
 
   const [selectedKey, setSelectedKey] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const sending = useRef(false);
+  const bookingAttempt = useRef(null);
   const service = selectedKey ? SERVICES[selectedKey] : null;
 
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
@@ -1051,8 +1058,11 @@ export default function Booking() {
   };
 
   const onConfirm = async () => {
+    if (sending.current) return;
+    sending.current = true;
+    setSubmitting(true);
     try {
-      const res = await createBooking({
+      const payload = {
         ServiceKey: selectedKey,
         // gửi ISO thật sự để .NET parse an toàn
         StartTime: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
@@ -1062,7 +1072,11 @@ export default function Booking() {
         ContactPhone: customerInfo.phone,
         Notes: customerInfo.notes,
         PaymentMethod: "cash",
-      });
+      };
+      const signature = JSON.stringify(payload);
+      if (bookingAttempt.current?.signature !== signature)
+        bookingAttempt.current = { signature, requestId: newRequestId() };
+      const res = await createBooking({ ...payload, RequestId: bookingAttempt.current.requestId });
 
       setSuccessCode("CM" + String(res.id).padStart(6, "0"));
       setCurrentStep(99);
@@ -1072,10 +1086,11 @@ export default function Booking() {
         data: err?.response?.data,
       });
       alert(err?.response?.data?.message || "Đặt lịch thất bại");
-    }
+    } finally { sending.current = false; setSubmitting(false); }
   };
 
   const resetAll = () => {
+    bookingAttempt.current = null;
     setCurrentStep(1);
     setSelectedKey(null);
     setSelectedDate(TODAY_STR);
@@ -1153,6 +1168,7 @@ export default function Booking() {
             pricing={pricingSummary}
             onBack={goBack}
             onConfirm={onConfirm}
+            submitting={submitting}
           />
         )}
 
