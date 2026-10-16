@@ -118,6 +118,7 @@ export default function Profile() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Ho so tai khoan</h1>
+          <a href="/security" className="text-emerald-700 underline">Đổi mật khẩu</a>
           <p className="mt-2 text-gray-600">
             Luu so dien thoai, dia chi mac dinh va dang ky them vai tro cleaner.
           </p>

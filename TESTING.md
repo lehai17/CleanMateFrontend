@@ -1,10 +1,19 @@
 # Automated testing
 
-Verified on 16 October 2026: 25 frontend, 93 backend and 32 customer-web Playwright
-tests passed. The separate admin portal passed 10 Playwright cases and 1 server test;
-cleaner-web passed 16 Playwright cases and 8 Node tests.
+Verified on 16 October 2026: 29 frontend, 105 backend and 36 customer-web Playwright
+tests passed. The separate admin portal passed 14 Playwright cases and 1 server test;
+cleaner-web passed 20 Playwright cases and 8 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
+
+Profile → Đổi mật khẩu opens /security. Confirmation is checked before sending;
+wrong current passwords retain the session. Success clears credentials and returns
+to login. Protected API 401 responses also remove a revoked session. The new system
+scenario changes the password, verifies rejection of the old token and signs in
+again using the new password.
+The same page can revoke all CleanMate sessions without changing the password.
+Tests dismiss then accept confirmation, check old-token rejection, and sign in
+again with the unchanged password. This also works for Google-only accounts.
 
 Booking support now covers both booking parties, staff resolution and notification
 navigation. A real-API scenario drops a committed report response, retries the same

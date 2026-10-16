@@ -4,6 +4,18 @@ const { randomUUID } = require("node:crypto");
 const API = "http://127.0.0.1:15238";
 const PORTAL = "http://127.0.0.1:15080";
 const PASSWORD = "CleanMate-system-test-123!";
+test('customer confirms logout all and can sign in with the unchanged password',async({page,request})=>{
+  const customer=await account(request);await login(page,customer.email);await page.goto('/security');
+  page.once('dialog',dialog=>dialog.dismiss());await page.getByRole('button',{name:'Đăng xuất tất cả thiết bị',exact:true}).click();expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(200);
+  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Đăng xuất tất cả thiết bị',exact:true}).click();await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toContainText('Đã đăng xuất tất cả thiết bị');
+  expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(401);
+  await page.locator('form input[type="email"]').fill(customer.email);await page.locator('form input[type="password"]').fill(PASSWORD);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await expect(page).toHaveURL(/\/security$/);
+});
+test('customer changes password and logs in again while old tokens are rejected',async({page,request})=>{
+  const customer=await account(request),next='New-customer-password-456!';await login(page,customer.email);await page.goto('/security');await page.getByLabel('Mật khẩu hiện tại',{exact:true}).fill(PASSWORD);await page.getByLabel('Mật khẩu mới',{exact:true}).fill(next);await page.getByLabel('Nhập lại mật khẩu mới',{exact:true}).fill(next);await page.getByRole('button',{name:'Lưu mật khẩu mới',exact:true}).click();await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toContainText('Đã đổi mật khẩu');
+  expect((await request.get(`${API}/api/me`,{headers:{Authorization:`Bearer ${customer.token}`}})).status()).toBe(401);
+  await page.locator('form input[type="email"]').fill(customer.email);await page.locator('form input[type="password"]').fill(next);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await expect(page).toHaveURL(/\/security$/);await page.goto('/profile');await expect(page.getByRole('link',{name:'Đổi mật khẩu',exact:true})).toBeVisible();
+});
 
 test('customer retries a committed support report without duplication and reads staff resolution',async({page,request})=>{
   const customer=await account(request),job=await apiBooking(request,customer);await login(page,customer.email);await page.goto('/support');
