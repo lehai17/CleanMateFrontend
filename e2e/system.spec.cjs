@@ -4,6 +4,17 @@ const { randomUUID } = require("node:crypto");
 const API = "http://127.0.0.1:15238";
 const PORTAL = "http://127.0.0.1:15080";
 const PASSWORD = "CleanMate-system-test-123!";
+test('customer retries a lost support message and reads the staff conversation',async({page,request})=>{
+  const customer=await account(request),job=await apiBooking(request,customer),headers={Authorization:`Bearer ${customer.token}`};
+  const created=await request.post(`${API}/api/support`,{headers,data:{bookingId:job.id,category:'Other',description:'Cần kiểm tra thông tin ca làm.',requestId:randomUUID()}});expect(created.status()).toBe(200);const ticket=(await created.json()).id;
+  await login(page,customer.email);await page.goto('/support');const card=page.locator(`[data-support-id="${ticket}"]`);await card.getByRole('button',{name:'Xem trao đổi',exact:true}).click();
+  let saved,payload;await page.route(`${API}/api/support/${ticket}/messages`,async route=>{if(route.request().method()!=='POST'||saved)return route.continue();payload=route.request().postDataJSON();const response=await route.fetch();expect(response.status()).toBe(200);saved=await response.json();await route.abort('failed');});
+  await card.getByLabel('Tin nhắn hỗ trợ',{exact:true}).fill('Khách bổ sung thông tin về ca làm.');await card.getByRole('button',{name:'Gửi tin nhắn',exact:true}).click();await expect(card.getByRole('alert')).toContainText('Không gửi được');await card.getByRole('button',{name:'Gửi tin nhắn',exact:true}).click();await expect(card.locator('[data-message-id]')).toHaveCount(1);
+  const history=await request.get(`${API}/api/support/${ticket}/messages`,{headers});expect((await history.json()).items).toHaveLength(1);expect(payload.body).toBe('Khách bổ sung thông tin về ca làm.');
+  const admin=await request.post(`${API}/api/auth/login`,{data:{email:'admin@system.test',password:'CleanMate-admin-test-123!'}});const manager={Authorization:`Bearer ${(await admin.json()).token}`};
+  expect((await request.post(`${API}/api/management/support/${ticket}/messages`,{headers:manager,data:{body:'Nhân viên xác nhận đã nhận thông tin bổ sung.',requestId:randomUUID()}})).status()).toBe(200);
+  await page.goto('/notifications');await page.locator('[data-notification-id]').filter({hasText:'Có tin nhắn hỗ trợ mới'}).getByRole('link',{name:'Xem hỗ trợ',exact:true}).click();await card.getByRole('button',{name:'Xem trao đổi',exact:true}).click();await expect(card.locator('[data-message-id]')).toHaveCount(2);await expect(card).toContainText('Nhân viên xác nhận');
+});
 test('login shows a readable retry message after throttling and permits retry',async({page,request})=>{
   const customer=await account(request);await page.goto('/login');
   await page.route(`${API}/api/auth/login`,route=>route.fulfill({status:429,contentType:'application/json',headers:{'Retry-After':'42'},body:JSON.stringify({message:'Thao tác quá nhiều lần. Thử lại sau 42 giây.',retryAfterSeconds:42})}));

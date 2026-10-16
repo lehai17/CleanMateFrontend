@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {api} from '../api/axios';
+import SupportConversation from '../components/SupportConversation';
 const categories={Scheduling:'Lịch làm / không đến',Quality:'Chất lượng công việc',CashPayment:'Tiền mặt trực tiếp',Other:'Vấn đề khác'};
 const statuses={Open:'Đã tiếp nhận',InProgress:'Đang xử lý',Resolved:'Đã giải quyết'};
 export default function Support() {
@@ -25,7 +26,7 @@ export default function Support() {
       <label>Loại sự cố<select name="category" aria-label="Loại sự cố" className="block w-full rounded border p-2">{Object.entries(categories).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
       <label>Mô tả<textarea name="description" aria-label="Mô tả" minLength={10} maxLength={2000} rows={4} required className="block w-full rounded border p-2" /></label><p role="status">{message}</p><button disabled={busy} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-50">{busy?'Đang gửi...':'Gửi yêu cầu hỗ trợ'}</button>
     </form><h2 className="my-5 text-xl font-semibold">Yêu cầu của tôi</h2><button onClick={load} disabled={loading} className="rounded border px-3 py-2">Tải lại hỗ trợ</button>{error&&<p role="alert">{error}</p>}{loading&&<p>Đang tải...</p>}
-    {data.items.map(item=><article key={item.id} data-support-id={item.id} className="my-4 rounded-xl border p-4"><h3 className="font-semibold">HT{item.id} · CM{item.bookingId}</h3><p>{statuses[item.status]} · {categories[item.category]}</p><p className="my-3 whitespace-pre-wrap">{item.description}</p><p className="whitespace-pre-wrap">{item.response?`Phản hồi từ staff: ${item.response}`:'Nhân viên chưa phản hồi.'}</p></article>)}
+    {data.items.map(item=><article key={item.id} data-support-id={item.id} className="my-4 rounded-xl border p-4"><h3 className="font-semibold">HT{item.id} · CM{item.bookingId}</h3><p>{statuses[item.status]} · {categories[item.category]}</p><p className="my-3 whitespace-pre-wrap">{item.description}</p><p className="whitespace-pre-wrap">{item.response?`Phản hồi từ staff: ${item.response}`:'Nhân viên chưa phản hồi.'}</p><SupportConversation ticketId={item.id} onUpdated={load} /></article>)}
     {!loading&&!error&&!data.items.length&&<p>Bạn chưa có yêu cầu hỗ trợ.</p>}<p>Trang {page} · {data.total} yêu cầu</p><button disabled={loading||page===1} onClick={()=>setPage(page-1)}>Trang trước</button> <button disabled={loading||page*20>=data.total} onClick={()=>setPage(page+1)}>Trang sau</button>
   </main>;
 }
