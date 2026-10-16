@@ -1,3 +1,4 @@
+import { Ui, Raw, t } from './../ui/Preferences';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { confirmOrderCompletion, deleteOrder, getOrders, rescheduleOrder, getRebooking } from "../api/bookings";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +50,7 @@ export default function Order() {
 
   async function handleDelete(id) {
     if (actionPending.current) return;
-    if (!window.confirm("Bạn có chắc muốn hủy đơn này?")) {
+    if (!window.confirm(t("Bạn có chắc muốn hủy đơn này?"))) {
       return;
     }
 
@@ -59,7 +60,7 @@ export default function Order() {
       await deleteOrder(id);
       setOrders((current) => current.map((item) => item.id === id ? { ...item, status: "Cancelled" } : item));
     } catch (error) {
-      alert(error?.response?.data?.message || "Không thể hủy đơn.");
+      alert(t(error?.response?.data?.message || "Không thể hủy đơn."));
     } finally { actionPending.current = false; setBusyId(null); }
   }
 
@@ -103,147 +104,147 @@ export default function Order() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Don hang da dat</h1>
-          <a href="/support" className="text-emerald-700 underline">Hỗ trợ đơn hàng</a>
-          <button onClick={fetchOrders} disabled={loading || busyId !== null}
-            className="rounded border px-3 py-2 disabled:opacity-50">Tải lại trạng thái</button>
-        </div>
+    <Ui as="div" className="bg-gray-50 min-h-screen">
+      <Ui as="main" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Ui as="div" className="mb-8 flex items-center justify-between">
+          <Ui as="h1" className="text-3xl font-bold text-gray-900">Don hang da dat</Ui>
+          <Ui as="a" href="/support" className="text-emerald-700 underline">Hỗ trợ đơn hàng</Ui>
+          <Ui as="button" onClick={fetchOrders} disabled={loading || busyId !== null}
+            className="rounded border px-3 py-2 disabled:opacity-50">Tải lại trạng thái</Ui>
+        </Ui>
 
-        <p className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">
+        <Ui as="p" className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">
           Khách trả tiền mặt trực tiếp cho cleaner sau khi hoàn thành ca. CleanMate chỉ kết nối dịch vụ, không thu hoặc giữ tiền.
-        </p>
-        {feedbackError && <p role="alert" className="mb-4 text-red-700">{feedbackError}</p>}
-        {message && <p role="status" className="mb-4 text-emerald-800">{message}</p>}
+        </Ui>
+        {feedbackError && <Ui as="p" role="alert" className="mb-4 text-red-700">{feedbackError}</Ui>}
+        {message && <Ui as="p" role="status" className="mb-4 text-emerald-800">{message}</Ui>}
 
         {loading && (
-          <div className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
+          <Ui as="div" className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
             Dang tai don hang...
-          </div>
+          </Ui>
         )}
 
         {!loading && err && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
-            <p className="font-medium">Khong the tai du lieu</p>
-            <p className="mt-1 text-sm">{err}</p>
-          </div>
+          <Ui as="div" className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
+            <Ui as="p" className="font-medium">Khong the tai du lieu</Ui>
+            <Ui as="p" className="mt-1 text-sm">{err}</Ui>
+          </Ui>
         )}
 
         {!loading && !err && orders.length === 0 && (
-          <div className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
+          <Ui as="div" className="rounded-xl bg-white p-8 shadow-sm text-gray-600">
             Ban chua co don hang nao.
-          </div>
+          </Ui>
         )}
 
         {!loading && !err && orders.length > 0 && (
-          <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="px-6 py-3">Ma don</th>
-                  <th className="px-6 py-3">Ngay bat dau</th>
-                  <th className="px-6 py-3">Dia chi</th>
-                  <th className="px-6 py-3">Cleaner nhận việc</th>
-                  <th className="px-6 py-3">Gia</th>
-                  <th className="px-6 py-3">Thanh toan</th>
-                  <th className="px-6 py-3">Trang thai</th>
-                  <th className="px-6 py-3">Hanh dong</th>
-                </tr>
-              </thead>
-              <tbody>
+          <Ui as="div" className="overflow-x-auto rounded-xl bg-white shadow-sm">
+            <Ui as="table" className="w-full border-collapse">
+              <Ui as="thead">
+                <Ui as="tr" className="bg-gray-100 text-left">
+                  <Ui as="th" className="px-6 py-3">Ma don</Ui>
+                  <Ui as="th" className="px-6 py-3">Ngay bat dau</Ui>
+                  <Ui as="th" className="px-6 py-3">Dia chi</Ui>
+                  <Ui as="th" className="px-6 py-3">Cleaner nhận việc</Ui>
+                  <Ui as="th" className="px-6 py-3">Gia</Ui>
+                  <Ui as="th" className="px-6 py-3">Thanh toan</Ui>
+                  <Ui as="th" className="px-6 py-3">Trang thai</Ui>
+                  <Ui as="th" className="px-6 py-3">Hanh dong</Ui>
+                </Ui>
+              </Ui>
+              <Ui as="tbody">
                 {orders.map((order) => (
-                  <tr key={order.id} className="border-t">
-                    <td className="px-6 py-4 font-semibold text-emerald-600">
+                  <Ui as="tr" key={order.id} className="border-t">
+                    <Ui as="td" className="px-6 py-4 font-semibold text-emerald-600">
                       {order.orderCode}
-                    </td>
-                    <td className="px-6 py-4">{formatDate(order.date)}</td>
-                    <td className="px-6 py-4">
-                      <p>{order.address || "-"}</p>
-                      {order.contactName && <p>Người liên hệ: {order.contactName}</p>}
-                      {order.contactPhone && <p>SĐT liên hệ: {order.contactPhone}</p>}
-                    </td>
-                    <td className="px-6 py-4">
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">{formatDate(order.date)}</Ui>
+                    <Ui as="td" className="px-6 py-4">
+                      <Ui as="p">{<Raw>{order.address || "-"}</Raw>}</Ui>
+                      {order.contactName && <Ui as="p">Người liên hệ: {<Raw>{order.contactName}</Raw>}</Ui>}
+                      {order.contactPhone && <Ui as="p">SĐT liên hệ: {<Raw>{order.contactPhone}</Raw>}</Ui>}
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">
                       {order.cleaner ? <>
-                        <p>{order.cleaner.name}</p>
-                        <p>{order.cleaner.phoneNumber || "Chưa cập nhật số điện thoại"}</p>
+                        <Ui as="p">{<Raw>{order.cleaner.name}</Raw>}</Ui>
+                        <Ui as="p">{<Raw>{order.cleaner.phoneNumber || "Chưa cập nhật số điện thoại"}</Raw>}</Ui>
                         {phoneLink(order.cleaner.phoneNumber) &&
-                          <a className="text-emerald-700 underline" href={phoneLink(order.cleaner.phoneNumber)}>Gọi cleaner</a>}
-                      </> : <p>Chưa có cleaner nhận việc</p>}
-                    </td>
-                    <td className="px-6 py-4">
+                          <Ui as="a" className="text-emerald-700 underline" href={phoneLink(order.cleaner.phoneNumber)}>Gọi cleaner</Ui>}
+                      </> : <Ui as="p">Chưa có cleaner nhận việc</Ui>}
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">
                       {typeof order.price === "number"
                         ? `${order.price.toLocaleString("vi-VN")} d`
                         : "-"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <p>{order.paymentMethod === "cash" ? "Tiền mặt trực tiếp" : "Ghi nhận cũ"}</p>
-                      <p>{paymentLabel(order.paymentStatus, order.paymentMethod)}</p>
-                      {order.paidAt && <p className="text-xs text-gray-500">Thời gian xác nhận: {formatDate(order.paidAt)}</p>}
-                    </td>
-                    <td className="px-6 py-4">
-                      <p>{order.status || "-"}</p>
-                      {order.startedAt && <p className="text-xs text-gray-500">Bắt đầu: {formatDate(order.startedAt)}</p>}
-                      {order.completedAt && <p className="text-xs text-gray-500">Hoàn thành: {formatDate(order.completedAt)}</p>}
-                      {order.customerConfirmedAt && <div className="mt-2 text-sm">
-                        <p>Khách đã xác nhận hoàn thành</p>
-                        <p>Đánh giá: {order.customerRating}/5 sao</p>
-                        {order.customerReview && <p>{order.customerReview}</p>}
-                      </div>}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">
+                      <Ui as="p">{order.paymentMethod === "cash" ? "Tiền mặt trực tiếp" : "Ghi nhận cũ"}</Ui>
+                      <Ui as="p">{paymentLabel(order.paymentStatus, order.paymentMethod)}</Ui>
+                      {order.paidAt && <Ui as="p" className="text-xs text-gray-500">Thời gian xác nhận: {formatDate(order.paidAt)}</Ui>}
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">
+                      <Ui as="p">{order.status || "-"}</Ui>
+                      {order.startedAt && <Ui as="p" className="text-xs text-gray-500">Bắt đầu: {formatDate(order.startedAt)}</Ui>}
+                      {order.completedAt && <Ui as="p" className="text-xs text-gray-500">Hoàn thành: {formatDate(order.completedAt)}</Ui>}
+                      {order.customerConfirmedAt && <Ui as="div" className="mt-2 text-sm">
+                        <Ui as="p">Khách đã xác nhận hoàn thành</Ui>
+                        <Ui as="p">Đánh giá: {order.customerRating}/5 sao</Ui>
+                        {order.customerReview && <Ui as="p">{<Raw>{order.customerReview}</Raw>}</Ui>}
+                      </Ui>}
+                    </Ui>
+                    <Ui as="td" className="px-6 py-4">
+                      <Ui as="button"
                         disabled={busyId !== null || order.status !== "Pending" || new Date(order.date) <= new Date()}
                         onClick={() => handleDelete(order.id)}
                         className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
                       >
                         Hủy đơn
-                      </button>
-                      {["Completed", "Cancelled"].includes(order.status) && <button
+                      </Ui>
+                      {["Completed", "Cancelled"].includes(order.status) && <Ui as="button"
                         disabled={busyId !== null} onClick={() => rebook(order.id)}
-                        className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Đặt lại</button>}
+                        className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Đặt lại</Ui>}
                       {order.status === "Pending" && !order.cleaner && new Date(order.date) > new Date() &&
-                        (rescheduling?.id === order.id ? <form onSubmit={submitReschedule} className="mt-3 space-y-2">
-                          <p>Chỉ đổi ngày/giờ khi chưa có cleaner nhận. Giá và thời lượng giữ nguyên.</p>
-                          <label htmlFor={`schedule-${order.id}`} className="block">Ngày giờ mới</label>
-                          <input id={`schedule-${order.id}`} type="datetime-local" required value={newTime}
+                        (rescheduling?.id === order.id ? <Ui as="form" onSubmit={submitReschedule} className="mt-3 space-y-2">
+                          <Ui as="p">Chỉ đổi ngày/giờ khi chưa có cleaner nhận. Giá và thời lượng giữ nguyên.</Ui>
+                          <Ui as="label" htmlFor={`schedule-${order.id}`} className="block">Ngày giờ mới</Ui>
+                          <Ui as="input" id={`schedule-${order.id}`} type="datetime-local" required value={newTime}
                             min={localInputTime(new Date(Date.now() + 60000))} disabled={busyId !== null}
                             onChange={event => setNewTime(event.target.value)} className="block rounded border p-2" />
-                          <button type="submit" disabled={busyId !== null || !newTime} className="rounded bg-emerald-700 px-3 py-2 text-white">Lưu lịch mới</button>
-                          <button type="button" disabled={busyId !== null} onClick={() => setRescheduling(null)} className="ml-2 rounded border px-3 py-2">Đóng</button>
-                        </form> : <button disabled={busyId !== null} onClick={() => {
+                          <Ui as="button" type="submit" disabled={busyId !== null || !newTime} className="rounded bg-emerald-700 px-3 py-2 text-white">Lưu lịch mới</Ui>
+                          <Ui as="button" type="button" disabled={busyId !== null} onClick={() => setRescheduling(null)} className="ml-2 rounded border px-3 py-2">Đóng</Ui>
+                        </Ui> : <Ui as="button" disabled={busyId !== null} onClick={() => {
                           setRescheduling(order); setNewTime(localInputTime(order.date));
                           setFeedbackError(""); setMessage(""); setEditingId(null);
-                        }} className="mt-2 block rounded border px-3 py-2">Đổi lịch</button>)}
+                        }} className="mt-2 block rounded border px-3 py-2">Đổi lịch</Ui>)}
                       {order.status === "Completed" && !order.customerConfirmedAt && (editingId === order.id ? (
-                        <form onSubmit={event => submitFeedback(event, order.id)} className="mt-3 space-y-2">
-                          <p>Xác nhận công việc đã hoàn thành. Đánh giá này không xác nhận đã trả tiền.</p>
-                          <label htmlFor={`rating-${order.id}`} className="block">Đánh giá ca làm</label>
-                          <select id={`rating-${order.id}`} required value={rating} disabled={busyId !== null}
+                        <Ui as="form" onSubmit={event => submitFeedback(event, order.id)} className="mt-3 space-y-2">
+                          <Ui as="p">Xác nhận công việc đã hoàn thành. Đánh giá này không xác nhận đã trả tiền.</Ui>
+                          <Ui as="label" htmlFor={`rating-${order.id}`} className="block">Đánh giá ca làm</Ui>
+                          <Ui as="select" id={`rating-${order.id}`} required value={rating} disabled={busyId !== null}
                             onChange={event => setRating(event.target.value)} className="rounded border p-2">
-                            <option value="">Chọn số sao</option>
-                            {[1, 2, 3, 4, 5].map(value => <option key={value} value={value}>{value} sao</option>)}
-                          </select>
-                          <label htmlFor={`review-${order.id}`} className="block">Nhận xét (không bắt buộc)</label>
-                          <textarea id={`review-${order.id}`} maxLength={1000} value={review} disabled={busyId !== null}
+                            <Ui as="option" value="">Chọn số sao</Ui>
+                            {[1, 2, 3, 4, 5].map(value => <Ui as="option" key={value} value={value}>{value} sao</Ui>)}
+                          </Ui>
+                          <Ui as="label" htmlFor={`review-${order.id}`} className="block">Nhận xét (không bắt buộc)</Ui>
+                          <Ui as="textarea" id={`review-${order.id}`} maxLength={1000} value={review} disabled={busyId !== null}
                             onChange={event => setReview(event.target.value)} className="block rounded border p-2" />
-                          <button type="submit" disabled={busyId !== null || !rating} className="rounded bg-emerald-700 px-3 py-2 text-white">Gửi đánh giá</button>
-                          <button type="button" disabled={busyId !== null} onClick={() => setEditingId(null)} className="ml-2 rounded border px-3 py-2">Đóng</button>
-                        </form>
-                      ) : <button disabled={busyId !== null} onClick={() => {
+                          <Ui as="button" type="submit" disabled={busyId !== null || !rating} className="rounded bg-emerald-700 px-3 py-2 text-white">Gửi đánh giá</Ui>
+                          <Ui as="button" type="button" disabled={busyId !== null} onClick={() => setEditingId(null)} className="ml-2 rounded border px-3 py-2">Đóng</Ui>
+                        </Ui>
+                      ) : <Ui as="button" disabled={busyId !== null} onClick={() => {
                         setEditingId(order.id); setRating(""); setReview(""); setFeedbackError("");
                         setRescheduling(null);
-                      }} className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Xác nhận và đánh giá</button>)}
-                    </td>
-                  </tr>
+                      }} className="mt-2 block rounded bg-emerald-700 px-3 py-2 text-white">Xác nhận và đánh giá</Ui>)}
+                    </Ui>
+                  </Ui>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </Ui>
+            </Ui>
+          </Ui>
         )}
-      </main>
-    </div>
+      </Ui>
+    </Ui>
   );
 }
 

@@ -1,5 +1,7 @@
+import { Ui, Raw, t } from './../ui/Preferences';
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { Link } from './../ui/Links';
 import { registerApi } from "../api/auth";
 
 export default function Register() {
@@ -58,28 +60,28 @@ export default function Register() {
         address: "",
         role: "Customer",
       });
-      alert("Đăng ký thành công!");
+      alert(t("Đăng ký thành công!"));
       navigate("/login");
     } catch (err) {
-      alert(err?.response?.data?.message || "Đăng ký thất bại.");
+      alert(t(err?.response?.data?.message || "Đăng ký thất bại."));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-emerald-600 to-amber-500 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-lg">
-        <div className="mb-6 text-center">
-          <img src="/images/logo.png" alt="CleanMate" className="mx-auto h-10 w-auto" />
-          <h1 className="mb-1 text-2xl font-semibold text-gray-900">Đăng ký CleanMate</h1>
-          <p className="text-gray-600">Tạo tài khoản khách hàng mới</p>
-        </div>
+    <Ui as="div" className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-emerald-600 to-amber-500 p-4">
+      <Ui as="div" className="w-full max-w-md rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-lg">
+        <Ui as="div" className="mb-6 text-center">
+          <Ui as="img" src="/images/logo.png" alt="CleanMate" className="mx-auto h-10 w-auto" />
+          <Ui as="h1" className="mb-1 text-2xl font-semibold text-gray-900">Đăng ký CleanMate</Ui>
+          <Ui as="p" className="text-gray-600">Tạo tài khoản khách hàng mới</Ui>
+        </Ui>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Họ và tên *</label>
-            <input
+        <Ui as="form" onSubmit={handleSubmit} className="space-y-4">
+          <Ui as="div">
+            <Ui as="label" className="mb-2 block text-sm font-medium text-gray-700">Họ và tên *</Ui>
+            <Ui as="input"
               type="text"
               name="fullName"
               required
@@ -88,12 +90,12 @@ export default function Register() {
               className={`w-full rounded-lg border px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.fullName ? "border-red-500" : "border-gray-300"}`}
               placeholder="Nhập họ và tên của bạn"
             />
-            {errors.fullName && <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>}
-          </div>
+            {errors.fullName && <Ui as="p" className="mt-1 text-sm text-red-500">{<Raw>{errors.fullName}</Raw>}</Ui>}
+          </Ui>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Email *</label>
-            <input
+          <Ui as="div">
+            <Ui as="label" className="mb-2 block text-sm font-medium text-gray-700">Email *</Ui>
+            <Ui as="input"
               type="email"
               name="email"
               required
@@ -102,12 +104,12 @@ export default function Register() {
               className={`w-full rounded-lg border px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.email ? "border-red-500" : "border-gray-300"}`}
               placeholder="Nhập email của bạn"
             />
-            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-          </div>
+            {errors.email && <Ui as="p" className="mt-1 text-sm text-red-500">{<Raw>{errors.email}</Raw>}</Ui>}
+          </Ui>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Số điện thoại *</label>
-            <input
+          <Ui as="div">
+            <Ui as="label" className="mb-2 block text-sm font-medium text-gray-700">Số điện thoại *</Ui>
+            <Ui as="input"
               type="tel"
               name="phone"
               required
@@ -116,13 +118,13 @@ export default function Register() {
               className={`w-full rounded-lg border px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.phone ? "border-red-500" : "border-gray-300"}`}
               placeholder="Nhập số điện thoại"
             />
-            {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
-          </div>
+            {errors.phone && <Ui as="p" className="mt-1 text-sm text-red-500">{<Raw>{errors.phone}</Raw>}</Ui>}
+          </Ui>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Mật khẩu *</label>
-            <div className="relative">
-              <input
+          <Ui as="div">
+            <Ui as="label" className="mb-2 block text-sm font-medium text-gray-700">Mật khẩu *</Ui>
+            <Ui as="div" className="relative">
+              <Ui as="input"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 maxLength={72}
@@ -132,21 +134,21 @@ export default function Register() {
                 className={`w-full rounded-lg border px-4 py-3 pr-12 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.password ? "border-red-500" : "border-gray-300"}`}
                 placeholder="Nhập mật khẩu (ít nhất 6 ký tự)"
               />
-              <button
+              <Ui as="button"
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               >
                 {showPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
-            {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-          </div>
+              </Ui>
+            </Ui>
+            {errors.password && <Ui as="p" className="mt-1 text-sm text-red-500">{errors.password}</Ui>}
+          </Ui>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Xác nhận mật khẩu *</label>
-            <div className="relative">
-              <input
+          <Ui as="div">
+            <Ui as="label" className="mb-2 block text-sm font-medium text-gray-700">Xác nhận mật khẩu *</Ui>
+            <Ui as="div" className="relative">
+              <Ui as="input"
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 maxLength={72}
@@ -156,58 +158,58 @@ export default function Register() {
                 className={`w-full rounded-lg border px-4 py-3 pr-12 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"}`}
                 placeholder="Nhập lại mật khẩu"
               />
-              <button
+              <Ui as="button"
                 type="button"
                 onClick={() => setShowConfirmPassword((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               >
                 {showConfirmPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
-            {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
-          </div>
+              </Ui>
+            </Ui>
+            {errors.confirmPassword && <Ui as="p" className="mt-1 text-sm text-red-500">{errors.confirmPassword}</Ui>}
+          </Ui>
 
-          <div>
-            <label className="flex items-start">
-              <input
+          <Ui as="div">
+            <Ui as="label" className="flex items-start">
+              <Ui as="input"
                 type="checkbox"
                 name="acceptTerms"
                 checked={formData.acceptTerms}
                 onChange={handleInputChange}
                 className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <span className="ml-2 text-sm text-gray-600">
+              <Ui as="span" className="ml-2 text-sm text-gray-600">
                 Tôi đồng ý với{" "}
-                <a href="#" className="font-medium text-emerald-600 hover:text-emerald-700">
+                <Ui as="a" href="#" className="font-medium text-emerald-600 hover:text-emerald-700">
                   Điều khoản sử dụng
-                </a>{" "}
+                </Ui>{" "}
                 và{" "}
-                <a href="#" className="font-medium text-amber-600 hover:text-amber-700">
+                <Ui as="a" href="#" className="font-medium text-amber-600 hover:text-amber-700">
                   Chính sách bảo mật
-                </a>
-              </span>
-            </label>
-            {errors.acceptTerms && <p className="mt-1 text-sm text-red-500">{errors.acceptTerms}</p>}
-          </div>
+                </Ui>
+              </Ui>
+            </Ui>
+            {errors.acceptTerms && <Ui as="p" className="mt-1 text-sm text-red-500">{errors.acceptTerms}</Ui>}
+          </Ui>
 
-          <button
+          <Ui as="button"
             type="submit"
             disabled={isLoading}
             className="mt-2 w-full rounded-lg bg-gradient-to-r from-emerald-600 to-amber-500 px-4 py-3 font-semibold text-white transition-all hover:from-emerald-500 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? "Đang đăng ký..." : "Đăng ký"}
-          </button>
-        </form>
+          </Ui>
+        </Ui>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
+        <Ui as="div" className="mt-6 text-center">
+          <Ui as="p" className="text-gray-600">
             Đã có tài khoản?{" "}
             <Link to="/login" className="font-medium text-amber-600 hover:text-amber-700">
               Đăng nhập ngay
             </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+          </Ui>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }

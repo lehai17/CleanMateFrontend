@@ -1,3 +1,4 @@
+import { Ui, Raw } from './../ui/Preferences';
 import { useEffect, useState } from "react";
 import {
   getProfileApi,
@@ -110,31 +111,31 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <div className="max-w-5xl mx-auto px-4 py-10">Dang tai profile...</div>;
+    return <Ui as="div" className="max-w-5xl mx-auto px-4 py-10">Dang tai profile...</Ui>;
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Ho so tai khoan</h1>
-          <a href="/security" className="text-emerald-700 underline">Đổi mật khẩu</a>
-          <p className="mt-2 text-gray-600">
+    <Ui as="div" className="bg-gray-50 min-h-screen py-10">
+      <Ui as="div" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Ui as="div" className="mb-8">
+          <Ui as="h1" className="text-3xl font-bold text-gray-900">Ho so tai khoan</Ui>
+          <Ui as="a" href="/security" className="text-emerald-700 underline">Đổi mật khẩu</Ui>
+          <Ui as="p" className="mt-2 text-gray-600">
             Luu so dien thoai, dia chi mac dinh va dang ky them vai tro cleaner.
-          </p>
+          </Ui>
           {message && (
-            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <Ui as="div" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               {message}
-            </div>
+            </Ui>
           )}
-        </div>
+        </Ui>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <section className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <Ui as="div" className="grid gap-8 lg:grid-cols-2">
+          <Ui as="section" className="rounded-2xl bg-white p-6 shadow-sm">
+            <Ui as="h2" className="text-xl font-semibold text-gray-900">
               Thong tin khach hang
-            </h2>
-            <form className="mt-6 space-y-4" onSubmit={handleProfileSubmit}>
+            </Ui>
+            <Ui as="form" className="mt-6 space-y-4" onSubmit={handleProfileSubmit}>
               <Field
                 label="Ho va ten"
                 value={form.fullName}
@@ -154,40 +155,40 @@ export default function Profile() {
                 onChange={(value) => setForm((current) => ({ ...current, address: value }))}
               />
 
-              <button
+              <Ui as="button"
                 type="submit"
                 disabled={saving}
                 className="rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 {saving ? "Dang luu..." : "Luu thong tin"}
-              </button>
-            </form>
-          </section>
+              </Ui>
+            </Ui>
+          </Ui>
 
-          <section className="rounded-2xl bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+          <Ui as="section" className="rounded-2xl bg-white p-6 shadow-sm">
+            <Ui as="div" className="flex items-center justify-between gap-4">
+              <Ui as="div">
+                <Ui as="h2" className="text-xl font-semibold text-gray-900">
                   {user?.isCleaner ? "Ho so cleaner" : "Dang ky lam cleaner"}
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
+                </Ui>
+                <Ui as="p" className="mt-1 text-sm text-gray-600">
                   {user?.isCleaner
                     ? "Tai khoan nay da co khu vuc nhan viec rieng."
                     : "Hồ sơ cần được nhân viên duyệt trước khi bạn được nhận ca làm."}
-                </p>
-              </div>
+                </Ui>
+              </Ui>
               {user?.isCleaner && (
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+                <Ui as="span" className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
                   Cleaner active
-                </span>
+                </Ui>
               )}
-            </div>
-            {user?.cleanerProfile && !user?.isCleaner && <div className="mt-4 rounded border p-4">
-              <p>Trạng thái hồ sơ: {({ Pending: "Chờ duyệt", NeedsInfo: "Cần bổ sung", Rejected: "Từ chối" })[user.cleanerProfile.reviewStatus] || user.cleanerProfile.reviewStatus}</p>
-              {user.cleanerProfile.reviewReason && <p>Lý do: {user.cleanerProfile.reviewReason}</p>}
-              <button type="button" onClick={() => getProfileApi().then(applyProfile).catch(() => setMessage("Không thể tải lại hồ sơ."))} className="mt-2 underline">Tải lại trạng thái hồ sơ</button>
-            </div>}
-            <form className="mt-6 space-y-4" onSubmit={handleCleanerSubmit}>
+            </Ui>
+            {user?.cleanerProfile && !user?.isCleaner && <Ui as="div" className="mt-4 rounded border p-4">
+              <Ui as="p">Trạng thái hồ sơ: {({ Pending: "Chờ duyệt", NeedsInfo: "Cần bổ sung", Rejected: "Từ chối" })[user.cleanerProfile.reviewStatus] || user.cleanerProfile.reviewStatus}</Ui>
+              {user.cleanerProfile.reviewReason && <Ui as="p">Lý do: {<Raw>{user.cleanerProfile.reviewReason}</Raw>}</Ui>}
+              <Ui as="button" type="button" onClick={() => getProfileApi().then(applyProfile).catch(() => setMessage("Không thể tải lại hồ sơ."))} className="mt-2 underline">Tải lại trạng thái hồ sơ</Ui>
+            </Ui>}
+            <Ui as="form" className="mt-6 space-y-4" onSubmit={handleCleanerSubmit}>
               <Field
                 label="Thanh pho lam viec"
                 value={cleanerForm.city}
@@ -200,11 +201,11 @@ export default function Profile() {
                   setCleanerForm((current) => ({ ...current, addressText: value }))
                 }
               />
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-gray-700">
+              <Ui as="label" className="block">
+                <Ui as="span" className="mb-2 block text-sm font-medium text-gray-700">
                   Gioi thieu ban than
-                </span>
-                <textarea
+                </Ui>
+                <Ui as="textarea"
                   rows="4"
                   value={cleanerForm.bio}
                   onChange={(event) =>
@@ -212,9 +213,9 @@ export default function Profile() {
                   }
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
-              </label>
+              </Ui>
 
-              <button
+              <Ui as="button"
                 type="submit"
                 disabled={cleanerSaving || (!user?.isCleaner && user?.cleanerProfile?.reviewStatus === "Pending")}
                 className="rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
@@ -224,26 +225,26 @@ export default function Profile() {
                   : user?.isCleaner
                   ? "Cap nhat ho so cleaner"
                   : user?.cleanerProfile?.reviewStatus === "Pending" ? "Đang chờ xét duyệt" : user?.cleanerProfile ? "Gửi lại hồ sơ" : "Dang ky lam cleaner"}
-              </button>
-            </form>
-          </section>
-        </div>
-      </div>
-    </div>
+              </Ui>
+            </Ui>
+          </Ui>
+        </Ui>
+      </Ui>
+    </Ui>
   );
 }
 
 function Field({ label, value, onChange, disabled = false, type = "text" }) {
   return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-gray-700">{label}</span>
-      <input
+    <Ui as="label" className="block">
+      <Ui as="span" className="mb-2 block text-sm font-medium text-gray-700">{label}</Ui>
+      <Ui as="input"
         type={type}
         value={value}
         disabled={disabled}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
         className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:bg-gray-100"
       />
-    </label>
+    </Ui>
   );
 }

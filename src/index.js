@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
+import { UiPreferencesProvider } from './ui/Preferences';
 import reportWebVitals from "./reportWebVitals";
 import { AuthProvider } from "./context/AuthContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -13,7 +14,7 @@ root.render(
     <GoogleOAuthProvider clientId="322324177186-rio3tjbo9jv5vgb7cbre62mkt83tehkr.apps.googleusercontent.com">
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <UiPreferencesProvider><App /></UiPreferencesProvider>
         </AuthProvider>
       </BrowserRouter>
     </GoogleOAuthProvider>
