@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { phoneLink } from "../utils/contact";
 import { newRequestId } from "../utils/requestId";
 import { getServices } from "../api/services";
+import { rebookingDraft, rebookingNotice } from "../utils/rebooking";
 
 /* =========================
    Data & Helpers
@@ -948,22 +949,29 @@ function Success({ code, onNew, onHome }) {
    MAIN: Booking (4 bước)
 ========================= */
 export default function Booking() {
+  const location = useLocation();
+  const { user } = useAuth();
   const [services, setServices] = useState(null);
   const [error, setError] = useState("");
-  const load = () => { setError(""); getServices().then(data => setServices(Object.fromEntries(data.map(s => [s.key, {
+  const catalogRequest = useRef(0);
+  const load = React.useCallback(() => { const request = ++catalogRequest.current; setServices(null); setError(""); getServices().then(data => {
+    if (request !== catalogRequest.current) return;
+    setServices(Object.fromEntries(data.map(s => [s.key, {
     ...SERVICE_PRESENTATION[s.key], name: s.name, price: s.hourlyRate, minHours: s.minHours, maxHours: s.maxHours,
-  }])))).catch(() => setError("Không thể tải dịch vụ và giá. Vui lòng thử lại.")); };
-  React.useEffect(() => { load(); }, []);
+  }]))); }).catch(() => { if (request === catalogRequest.current) setError("Không thể tải dịch vụ và giá. Vui lòng thử lại."); }); }, []);
+  React.useEffect(() => { load(); return () => { catalogRequest.current++; }; }, [load, location.state?.rebookKey, user?.id]);
   if (error) return <main className="p-8"><p role="alert">{error}</p><button onClick={load}>Thử lại</button></main>;
   if (!services) return <main className="p-8">Đang tải dịch vụ...</main>;
   if (!Object.keys(services).length) return <main className="p-8">Hiện chưa có dịch vụ mở đặt lịch.</main>;
-  return <BookingFlow services={services} />;
+  return <BookingFlow key={`${user?.id}:${location.state?.rebookKey || 'new'}`} services={services}
+    rebook={rebookingDraft(location.state?.rebook, services, user)} />;
 }
 
-function BookingFlow({ services: SERVICES }) {
+function BookingFlow({ services: SERVICES, rebook }) {
   const { user } = useAuth();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(rebook?.selectedKey ? 2 : 1);
+  const [rebookMessage, setRebookMessage] = useState(rebookingNotice(rebook));
 
   const location = useLocation();
   React.useEffect(() => {
@@ -995,17 +1003,17 @@ function BookingFlow({ services: SERVICES }) {
     }
   }, [location.state]);
 
-  const [selectedKey, setSelectedKey] = useState(null);
+  const [selectedKey, setSelectedKey] = useState(rebook?.selectedKey ?? null);
   const [submitting, setSubmitting] = useState(false);
   const sending = useRef(false);
   const bookingAttempt = useRef(null);
   const service = selectedKey ? SERVICES[selectedKey] : null;
 
-  const [selectedDate, setSelectedDate] = useState(TODAY_STR);
+  const [selectedDate, setSelectedDate] = useState(toDateStr(new Date()));
   const [selectedTime, setSelectedTime] = useState("");
-  const [duration, setDuration] = useState(service?.minHours ?? 2);
+  const [duration, setDuration] = useState(rebook?.duration ?? service?.minHours ?? 2);
 
-  const [customerInfo, setCustomerInfo] = useState({
+  const [customerInfo, setCustomerInfo] = useState(rebook?.customerInfo ?? {
     name: "",
     phone: "",
     email: "",
@@ -1104,6 +1112,7 @@ function BookingFlow({ services: SERVICES }) {
   };
 
   const resetAll = () => {
+    setRebookMessage('');
     bookingAttempt.current = null;
     setCurrentStep(1);
     setSelectedKey(null);
@@ -1139,6 +1148,7 @@ function BookingFlow({ services: SERVICES }) {
       )}
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {rebookMessage && currentStep !== 99 && <p role="status" className="mb-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">{rebookMessage}</p>}
         {currentStep === 1 && (
           <StepService
             services={SERVICES}

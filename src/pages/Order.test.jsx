@@ -1,9 +1,12 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import Order from "./Order";
-import { getOrders, deleteOrder, confirmOrderCompletion, rescheduleOrder } from "../api/bookings";
+import { getOrders, deleteOrder, confirmOrderCompletion, rescheduleOrder, getRebooking } from "../api/bookings";
 
-jest.mock("../api/bookings", () => ({ getOrders: jest.fn(), deleteOrder: jest.fn(), confirmOrderCompletion: jest.fn(), rescheduleOrder: jest.fn() }));
+const mockNavigate = jest.fn();
+beforeAll(() => Object.defineProperty(window, "crypto", { value: require("crypto").webcrypto, configurable: true }));
+jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }));
+jest.mock("../api/bookings", () => ({ getOrders: jest.fn(), deleteOrder: jest.fn(), confirmOrderCompletion: jest.fn(), rescheduleOrder: jest.fn(), getRebooking: jest.fn() }));
 beforeEach(() => jest.clearAllMocks());
 
 test("refresh shows the assigned cleaner contact and avoids unusable call links", async () => {
@@ -138,4 +141,30 @@ test("failed feedback remains editable and does not invent confirmation", async 
     expect(container.textContent).not.toContain("Khách đã xác nhận hoàn thành");
     expect(container.querySelector("select").value).toBe("4");
   } finally { await act(async () => root.unmount()); }
+});
+
+
+test('rebooking only opens a draft for a finished order and prevents duplicate loads', async () => {
+  getOrders.mockResolvedValue([{id:31,status:'Cancelled'},{id:32,status:'Pending'}]);
+  let resolve;getRebooking.mockImplementation(()=>new Promise(done=>{resolve=done;}));
+  const container=document.createElement('div'),root=createRoot(container);
+  try {
+    await act(async()=>root.render(<Order/>));
+    const button=[...container.querySelectorAll('button')].find(b=>b.textContent==='Đặt lại');
+    expect(button).toBeDefined();
+    expect([...container.querySelectorAll('button')].filter(b=>b.textContent==='Đặt lại')).toHaveLength(1);
+    await act(async()=>{button.click();button.click();});expect(getRebooking).toHaveBeenCalledTimes(1);expect(button.disabled).toBe(true);
+    const template={sourceId:31,ownerId:12,serviceKey:'cleaning',durationHours:2,address:'Original booking address'};
+    await act(async()=>resolve(template));
+    expect(mockNavigate).toHaveBeenCalledWith('/booking',{state:{rebook:template,rebookKey:expect.any(String)}});
+  } finally {await act(async()=>root.unmount());}
+});
+
+test('failed rebooking keeps the order visible and allows retry without navigation', async () => {
+  getOrders.mockResolvedValue([{id:31,status:'Completed'}]);getRebooking.mockRejectedValue(new Error('offline'));
+  const container=document.createElement('div'),root=createRoot(container);
+  try {
+    await act(async()=>root.render(<Order/>));const button=[...container.querySelectorAll('button')].find(b=>b.textContent==='Đặt lại');
+    await act(async()=>button.click());expect(container.querySelector('[role="alert"]')).not.toBeNull();expect(button.disabled).toBe(false);expect(mockNavigate).not.toHaveBeenCalled();
+  } finally {await act(async()=>root.unmount());}
 });

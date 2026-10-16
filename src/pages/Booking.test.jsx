@@ -5,7 +5,7 @@ import { createBooking } from "../api/bookings";
 import { getServices } from "../api/services";
 
 const mockLocation = { state: null };
-const mockUser = { fullName: "Customer", phoneNumber: "0901234567", email: "customer@example.test", address: "123 Test Street" };
+const mockUser = { id: 12, fullName: "Customer", phoneNumber: "0901234567", email: "customer@example.test", address: "123 Test Street" };
 jest.mock("react-router-dom", () => ({
   useLocation: () => mockLocation,
   useNavigate: () => jest.fn(),
@@ -123,4 +123,27 @@ test("retry after a lost response keeps the same request key", async () => {
     expect(createBooking.mock.calls[1][0]).toEqual(createBooking.mock.calls[0][0]);
     expect(container.textContent).toContain("CM000044");
   } finally { errorLog.mockRestore(); }
+});
+
+
+test('rebooking requires a new schedule, clamps old hours and uses the current service key and price', async () => {
+  mockLocation.state={rebookKey:'repeat-1',rebook:{ownerId:12,sourceId:31,serviceKey:'cleaning',durationHours:4,contactName:'Original Contact',contactPhone:'0907777777',address:'Original address',notes:'Original notes',date:'2000-01-01',time:'09:00',price:1,cleanerId:99}};
+  getServices.mockResolvedValueOnce([{key:'cleaning',name:'Renamed service',hourlyRate:81000,minHours:1,maxHours:2}]);
+  await act(async()=>root.render(<Booking/>));
+  expect(container.querySelector('input[type="time"]').value).toBe('');
+  expect(container.textContent).toContain('Renamed service');expect(container.textContent).toContain('162.000');
+  expect([...container.querySelectorAll('button')].find(b=>b.textContent==='Tiếp tục').disabled).toBe(true);
+  expect(createBooking).not.toHaveBeenCalled();
+});
+
+test('an unavailable old service requires choosing from the current catalog', async () => {
+  mockLocation.state={rebookKey:'repeat-2',rebook:{ownerId:12,sourceId:31,serviceKey:'retired',durationHours:2}};
+  await act(async()=>root.render(<Booking/>));
+  expect(container.querySelector('input[type="time"]')).toBeNull();
+  expect(container.textContent).toContain('Dịch vụ cũ không còn mở đặt');expect(createBooking).not.toHaveBeenCalled();
+});
+
+test('a rebooking draft from another account is ignored', async () => {
+  mockLocation.state={rebookKey:'repeat-private',rebook:{ownerId:99,sourceId:31,serviceKey:'cleaning',durationHours:2,notes:'Private previous account note'}};
+  await act(async()=>root.render(<Booking/>));expect(container.textContent).not.toContain('Private previous account note');expect(container.textContent).not.toContain('CM31');expect(container.querySelector('input[type="time"]')).toBeNull();
 });
