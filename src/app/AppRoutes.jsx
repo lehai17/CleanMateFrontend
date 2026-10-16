@@ -16,6 +16,7 @@ import CleanerJobs from "../pages/CleanerJobs";
 import Notifications from "../pages/Notifications";
 import Support from '../pages/Support';
 import Security from '../pages/Security';
+import Recovery from '../pages/Recovery';
 import { NotificationProvider } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -25,6 +26,7 @@ export default function AppRoutes({ shouldHideChrome }) {
     <NotificationProvider>
       {!shouldHideChrome && <Header />}
       <Routes>
+        <Route path="/forgot-password" element={<Recovery />} />
         <Route path="/security" element={<PrivateRoute><Security key={user?.id} /></PrivateRoute>} />
         <Route path="/support" element={<PrivateRoute><Support key={user?.id} /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications key={user?.id} /></PrivateRoute>} />

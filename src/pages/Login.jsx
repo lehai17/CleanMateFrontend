@@ -108,7 +108,7 @@ export default function Login() {
             </label>
             <button
               type="button"
-              onClick={() => alert("Tính năng quên mật khẩu đang được cập nhật.")}
+              onClick={() => navigate('/forgot-password')}
               className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
             >
               Quên mật khẩu?

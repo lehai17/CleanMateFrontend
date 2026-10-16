@@ -10,9 +10,9 @@ mobile system scenario injects 429, verifies the wait message and retries the re
 login successfully. Signup inputs cap new passwords at 72 characters; the backend
 enforces the stricter 72 UTF-8 byte bound. See ../backend/AUTH_RATE_LIMITS.md.
 
-Verified on 16 October 2026: 36 frontend, 146 backend and 44 customer-web Playwright
-tests passed. The separate admin portal passed 26 Playwright cases and 5 Node tests;
-cleaner-web passed 24 Playwright cases and 9 Node tests.
+Verified on 16 October 2026: 38 frontend, 171 backend and 50 customer-web Playwright
+tests passed. The separate admin portal passed 30 Playwright cases and 5 Node tests;
+cleaner-web passed 28 Playwright cases and 9 Node tests.
 The web production build and Android bundle export succeeded. Test database
 cleanup was confirmed.
 
